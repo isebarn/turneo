@@ -443,7 +443,23 @@ class Excluded(EmbeddedDocument):
 
 class Experience(Extended):
     status = StringField()
-    commission = IntField()
+    name = StringField()
+    code = StringField()
+    category = StringField()
+    highlight = StringField()
+    description = StringField()
+    cancellationPolicy = StringField()
+    video = StringField()
+    otherNotes = StringField()
+    organizer = EmbeddedDocumentField(Organizer)
+    meetingPoint = EmbeddedDocumentField(Meetingpoint)
+    pickup = EmbeddedDocumentField(Pickup)
+    duration = EmbeddedDocumentField(Duration)
+    externalLinks = EmbeddedDocumentField(Externallinks)
+    rating = EmbeddedDocumentField(Rating)
+    images = EmbeddedDocumentListField(Images)
+    included = EmbeddedDocumentListField(Included)
+    excluded = EmbeddedDocumentListField(Excluded)
 
 
 class Dates(EmbeddedDocument):
@@ -453,6 +469,7 @@ class Dates(EmbeddedDocument):
 
 
 class Price(EmbeddedDocument):
+    price = StringField()
     amount = IntField()
     currency = StringField()
 
@@ -463,28 +480,31 @@ class PrivateGroup(EmbeddedDocument):
 
 
 class Rates(Extended):
-    currency = StringField()
+    status = StringField()
+    dates = EmbeddedDocumentListField(Dates)
     experience = ReferenceField(Experience, reverse_delete_rule=NULLIFY)
-    price = EmbeddedDocumentField(Price)
-    excluded = EmbeddedDocumentListField(Excluded)
+    maxParticipants = IntField()
+    prices = EmbeddedDocumentListField(Price)
+    private_group = EmbeddedDocumentField(PrivateGroup)
+
 
 
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()
