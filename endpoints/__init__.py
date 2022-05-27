@@ -158,4 +158,4 @@ class BaseRatesController(Resource):
 
 
 
-routes = list(set([x.urls[0].split('/'')[1] for x in api.resources]))
+routes = list(set([x.urls[0].split('/')[1] for x in api.resources]))
