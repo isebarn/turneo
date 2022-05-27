@@ -262,23 +262,23 @@ class Extended(Document):
     def model(cls, api):
         return {
             **cls.base(),
-            # **{
-            #     field: Nested(api.models.get(field), skip_none=True)
-            #     for field, instance in cls._fields.items()
-            #     if isinstance(instance, ReferenceField)
-            #     or isinstance(instance, DictField)
-            #     or isinstance(instance, EmbeddedDocumentField)
-            # },
-            # **{
-            #     field: List(
-            #         Nested(
-            #             api.models.get(field),
-            #             skip_none=True,
-            #         ),
-            #     )
-            #     for field, instance in cls._fields.items()
-            #     if isinstance(instance, ListField)
-            # },
+            **{
+                field: Nested(api.models.get(field), skip_none=True)
+                for field, instance in cls._fields.items()
+                if isinstance(instance, ReferenceField)
+                or isinstance(instance, DictField)
+                or isinstance(instance, EmbeddedDocumentField)
+            },
+            **{
+                field: List(
+                    Nested(
+                        api.models.get(field),
+                        skip_none=True,
+                    ),
+                )
+                for field, instance in cls._fields.items()
+                if isinstance(instance, ListField)
+            },
         }
 
     @classmethod
@@ -370,14 +370,13 @@ class EmbeddedDocument(_EmbeddedDocument):
 
     @classmethod
     def base(cls):
-        return {}
-        # return {
-        #     **{
-        #         key: getattr(cls, key).marshal
-        #         for key, value in list(cls._fields.items())
-        #         if hasattr(getattr(cls, key), "marshal")
-        #     }
-        # }
+        return {
+            **{
+                key: getattr(cls, key).marshal
+                for key, value in list(cls._fields.items())
+                if hasattr(getattr(cls, key), "marshal")
+            }
+        }
 
     @classmethod
     def reference(cls):
@@ -398,7 +397,7 @@ class Organizer(EmbeddedDocument):
     partnerId = StringField()
 
 
-class Meetingpoint(EmbeddedDocument):
+class MeetingPoint(EmbeddedDocument):
     address = StringField()
     city = StringField()
     country = StringField()
@@ -416,7 +415,7 @@ class Duration(EmbeddedDocument):
     minutes = IntField()
 
 
-class Externallinks(EmbeddedDocument):
+class ExternalLinks(EmbeddedDocument):
     name = StringField()
     url = StringField()
 
@@ -455,56 +454,55 @@ class Experience(Extended):
     mimimumParticipants = IntField()
     cutOffTime = IntField()
     organizer = EmbeddedDocumentField(Organizer)
-    meetingPoint = EmbeddedDocumentField(Meetingpoint)
+    meetingPoint = EmbeddedDocumentField(MeetingPoint)
     pickup = EmbeddedDocumentField(Pickup)
     duration = EmbeddedDocumentField(Duration)
-    externalLinks = EmbeddedDocumentField(Externallinks)
+    externalLinks = EmbeddedDocumentField(ExternalLinks)
     rating = EmbeddedDocumentField(Rating)
     images = EmbeddedDocumentListField(Images)
     included = EmbeddedDocumentListField(Included)
     excluded = EmbeddedDocumentListField(Excluded)
 
 
-class Minimumgroupretailprice(EmbeddedDocument):
+class MinimumGroupRetailPrice(EmbeddedDocument):
     amount = IntField()
     currency = StringField()
 
 
-class Privategroup(EmbeddedDocument):
+class PrivateGroup(EmbeddedDocument):
     privateAllowed = StringField()
-    minimumGroupRetailPrice = EmbeddedDocumentField(Minimumgroupretailprice)
+    minimumGroupRetailPrice = EmbeddedDocumentField(MinimumGroupRetailPrice)
 
 
-class Daterange(EmbeddedDocument):
+class DateRange(EmbeddedDocument):
     start = DateTimeField()
     until = DateTimeField()
 
 
-class Retailprice(EmbeddedDocument):
+class RetailPrice(EmbeddedDocument):
     currency = StringField()
     amount = IntField()
 
 
-class Ratetypesprices(EmbeddedDocument):
+class RateTypesPrices(EmbeddedDocument):
     rateType = StringField()
-    retailPrice = EmbeddedDocumentField(Retailprice)
+    retailPrice = EmbeddedDocumentField(RetailPrice)
 
 
-class Starttimes(EmbeddedDocument):
+class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
-
 
 class Rates(Extended):
     experience = ReferenceField(Experience, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
-    privateGroup = EmbeddedDocumentField(Privategroup)
-    dateRange = EmbeddedDocumentField(Daterange)
-    rateTypesPrices = EmbeddedDocumentListField(Ratetypesprices)
-    startTimes = EmbeddedDocumentListField(Starttimes)
+    privateGroup = EmbeddedDocumentField(PrivateGroup)
+    dateRange = EmbeddedDocumentField(DateRange)
+    rateTypesPrices = EmbeddedDocumentListField(RateTypesPrices)
+    startTimes = EmbeddedDocumentListField(StartTimes)
 
 
-class Travelerinformation(EmbeddedDocument):
+class TravelerInformation(EmbeddedDocument):
     firstName = StringField()
     lastName = StringField()
     email = StringField()
@@ -515,7 +513,7 @@ class Notes(EmbeddedDocument):
     fromTraveller = StringField()
 
 
-class Ratesquantity(EmbeddedDocument):
+class RatesQuantity(EmbeddedDocument):
     rateType = StringField()
     quantity = IntField()
 
@@ -525,27 +523,28 @@ class Booking(Extended):
     startDate = DateTimeField()
     startTime = StringField()
     privateGroup = StringField()
-    travelerInformation = EmbeddedDocumentField(Travelerinformation)
+    travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
-    ratesQuantity = EmbeddedDocumentListField(Ratesquantity)
+    ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
+
 
 
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()
