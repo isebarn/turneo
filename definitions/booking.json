@@ -1,0 +1,21 @@
+{
+  "travelerInformation": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@gmail.com"
+  },
+  "notes": {
+    "fromSeller": "This is an imaginary person",
+    "fromTraveller": "I am an imaginary person"
+  },
+  "rate": "2f17a747-07b9-4ffc-8b53-52dfff8bee85",
+  "startDate": "2022-03-14",
+  "startTime": "11:00",
+  "privateGroup": "TRUE",
+  "ratesQuantity": [
+    {
+      "rateType": "Adult",
+      "quantity": 2
+    }
+  ]
+}

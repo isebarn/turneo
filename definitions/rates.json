@@ -1,0 +1,32 @@
+{
+  "experience": "b181e675-c74f-4279-81ff-b944a2f310ef",
+  "maxParticipants": 10,
+  "rateTypesPrices": [
+    {
+      "rateType": "Adult",
+      "retailPrice": {
+        "amount": 40,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "privateGroup": {
+    "privateAllowed": "TRUE",
+    "minimumGroupRetailPrice": {
+      "amount": 40,
+      "currency": "EUR"
+    }
+  },
+  "dateRange": {
+    "start": "2022-05-15",
+    "until": "2022-11-15"
+  },
+  "startTimes": [
+    {
+      "timeSlot": "11:30",
+      "daysOfTheWeek": [
+        "Monday"
+      ]
+    }
+  ]
+}
