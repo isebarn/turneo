@@ -100,82 +100,30 @@ else:
     )
 
 
+def convert(value):
+    return ObjectId(value) if ObjectId.is_valid(value) else value
+
+
 class Extended(Document):
     meta = {"abstract": True, "allow_inheritance": True}
 
-    def __init__(self, *args, **kwargs):
-        if "id" in kwargs:
-            super(Document, self).__init__(*args, **kwargs)
+    @classmethod
+    def fix_data(cls, key, value):
+        if isinstance(value, list):
+            return [cls.fix_data(key, x) for x in value]
 
-        else:  # Create new document and recursively create or link to existing ReferenceField docs
-            super(Document, self).__init__(
-                *args,
-                **{
-                    k: v
-                    for k, v in kwargs.items()
-                    if not (isinstance(v, dict) or isinstance(v, list))
-                }
-            )
+        if isinstance(value, str):
+            return convert(value)
+        elif isinstance(value, dict):
+            if "id" in value:
+                return convert(value["id"])
+            elif isinstance(getattr(cls, key), EmbeddedDocumentField):
+                return getattr(cls, key).document_type_obj(**value)
+            elif isinstance(getattr(cls, key), EmbeddedDocumentListField):
+                return getattr(cls, key).field.document_type_obj(**value)
 
-            for key, value in self._fields.items():
-                if isinstance(value, ListField) and key in kwargs:
-                    for (i, item) in enumerate(kwargs.get(key, [])):
-                        if isinstance(kwargs[key], Document):
-                            continue
-
-                        elif isinstance(item, dict) and "id" in item:
-                            kwargs[key][i] = value.field.document_type_obj.objects.get(
-                                id=item["id"]
-                            )
-
-                        elif isinstance(item, str) and ObjectId.is_valid(item):
-                            kwargs[key][i] = value.field.document_type_obj.objects.get(
-                                id=item
-                            )
-
-                        else:
-                            kwargs[key][i] = value.field.document_type_obj(**item)
-
-                    setattr(self, key, kwargs[key])
-
-                if isinstance(value, ReferenceField) and key in kwargs:
-                    print(123)
-                    # link to existing
-                    if isinstance(kwargs[key], Document):
-                        setattr(self, key, kwargs[key])
-
-                    # pass entire object
-                    if "id" in kwargs[key]:
-                        setattr(
-                            self,
-                            key,
-                            value.document_type_obj.objects.get(id=kwargs[key]["id"]),
-                        )
-
-                    # pass ObjectId string of object
-                    elif ObjectId.is_valid(kwargs.get(key, "")):
-                        setattr(
-                            self,
-                            key,
-                            value.document_type_obj.objects.get(id=kwargs[key]),
-                        )
-
-                    # create new ReferenceField
-                    else:
-                        setattr(
-                            self,
-                            key,
-                            value.document_type_obj(**{key: {"id": kwargs[key]}}),
-                        )
-
-                elif isinstance(value, EmbeddedDocumentField) and key in kwargs:
-                    setattr(self, key, value.document_type_obj(**kwargs.get(key)))
-
-                # special for Raw fields that are wildcards
-                elif isinstance(value, DictField) and isinstance(kwargs.get(key), dict):
-                    setattr(self, key, kwargs.get(key))
-
-            self.save()
+        else:
+            return value
 
     def to_json(self):
         def f(v):
@@ -192,66 +140,33 @@ class Extended(Document):
         return data
 
     @classmethod
-    def set(cls, *args, **kwargs):
-        id = kwargs.pop("id")
-        item = cls.objects.get(id=id)
-
-        # ???
-        for key, value in kwargs.items():
-
-            if isinstance(value, list) and any(value):
-                string_object_ids = [
-                    x.get("id") if isinstance(x, dict) else x for x in value
-                ]
-                if all(map(lambda x: ObjectId.is_valid(x), string_object_ids)):
-                    kwargs[key] = [ObjectId(x) for x in string_object_ids]
-
-            elif isinstance(value, dict) and "id" in value:
-                kwargs[key] = value["id"]
-
-        cls.objects(id=id).update_one(
-            **{
-                key.replace("$", "")
-                if key.startswith("$")
-                else "set__{}".format(key): (
-                    ObjectId(value) if ObjectId.is_valid(value) else value
-                )
-                for key, value in kwargs.items()
-            }
-        )
-
-        return cls.objects.get(id=id)
+    def post(cls, data):
+        item = cls(**data)
+        item.save()
+        return item.to_json()
 
     @classmethod
-    def update(cls, *args, **kwargs):
-        id = kwargs.pop("id")
-        item = cls.objects.get(id=id)
-
-        # ???
-        for key, value in kwargs.items():
-            if isinstance(value, list) and any(value):
-                string_object_ids = [x.get("id", {}).get("$oid") for x in value]
-                if all(map(lambda x: ObjectId.is_valid(x), string_object_ids)):
-                    value = [ObjectId(x) for x in string_object_ids]
-
-            elif isinstance(value, dict) and "id" in value:
-                kwargs[key] = value["id"]
+    def put(cls, data):
+        item = cls.objects.get(id=data.pop("id"))
 
         [delattr(item, k) for k, v in cls._fields.items() if k not in ["_cls", "id"]]
+        for key, value in data.items():
+            setattr(item, key, cls.fix_data(key, value))
 
         item.save()
 
-        cls.objects(id=id).update_one(
-            **{
-                key.replace("$", "")
-                if key.startswith("$")
-                else "set__{}".format(key): (
-                    ObjectId(value) if ObjectId.is_valid(value) else value
-                )
-                for key, value in kwargs.items()
-            }
-        )
-        return cls.objects.get(id=id)
+        return item.to_json()
+
+    @classmethod
+    def patch(cls, data):
+        item = cls.objects.get(id=data.pop("id"))
+
+        for key, value in data.items():
+            setattr(item, key, cls.fix_data(key, value))
+
+        item.save()
+
+        return item.to_json()
 
     @classmethod
     def get(cls, *args, **kwargs):
@@ -283,10 +198,11 @@ class Extended(Document):
 
         filters = {}
         for query, search in kwargs.items():
+
             if query.startswith("$"):
                 continue
 
-            if query.split("__")[0] in cls._fields.keys():
+            elif query.split("__")[0] not in cls._reference_fields():
                 filters.update({query: search})
 
             else:
@@ -527,23 +443,7 @@ class Excluded(EmbeddedDocument):
 
 class Experience(Extended):
     status = StringField()
-    name = StringField()
-    code = StringField()
-    category = StringField()
-    highlight = StringField()
-    description = StringField()
-    cancellationPolicy = StringField()
-    video = StringField()
-    otherNotes = StringField()
-    organizer = EmbeddedDocumentField(Organizer)
-    meetingPoint = EmbeddedDocumentField(Meetingpoint)
-    pickup = EmbeddedDocumentField(Pickup)
-    duration = EmbeddedDocumentField(Duration)
-    externalLinks = EmbeddedDocumentField(Externallinks)
-    rating = EmbeddedDocumentField(Rating)
-    images = EmbeddedDocumentListField(Images)
-    included = EmbeddedDocumentListField(Included)
-    excluded = EmbeddedDocumentListField(Excluded)
+    commission = IntField()
 
 
 class Dates(EmbeddedDocument):
@@ -553,7 +453,6 @@ class Dates(EmbeddedDocument):
 
 
 class Price(EmbeddedDocument):
-    price = StringField()
     amount = IntField()
     currency = StringField()
 
@@ -564,31 +463,28 @@ class PrivateGroup(EmbeddedDocument):
 
 
 class Rates(Extended):
-    status = StringField()
-    dates = EmbeddedDocumentListField(Dates)
+    currency = StringField()
     experience = ReferenceField(Experience, reverse_delete_rule=NULLIFY)
-    maxParticipants = IntField()
-    prices = EmbeddedDocumentListField(Price)
-    private_group = EmbeddedDocumentField(PrivateGroup)
-
+    price = EmbeddedDocumentField(Price)
+    excluded = EmbeddedDocumentListField(Excluded)
 
 
 # def config():
-    # signals.pre_save.connect(Class.pre_save, sender=Class)
-    # signals.post_save.connect(Class.post_save, sender=Class)
+# signals.pre_save.connect(Class.pre_save, sender=Class)
+# signals.post_save.connect(Class.post_save, sender=Class)
 
-    # seed
-    # logging.info("Seeding database")
-    # seed = load(open("models/seed.json"))
+# seed
+# logging.info("Seeding database")
+# seed = load(open("models/seed.json"))
 
-    # helper method to remove "_id" and "_cls" so I can compare json objects
-    # from the db
-    # def remove_meta_from_dict_item(item):
-    #     item.pop("_cls")
-    #     item.pop("_id")
-    #     for key, value in item.items():
-    #         if isinstance(value, dict):
-    #             remove_meta_from_dict_item(value)
+# helper method to remove "_id" and "_cls" so I can compare json objects
+# from the db
+# def remove_meta_from_dict_item(item):
+#     item.pop("_cls")
+#     item.pop("_id")
+#     for key, value in item.items():
+#         if isinstance(value, dict):
+#             remove_meta_from_dict_item(value)
 
 
 # config()
