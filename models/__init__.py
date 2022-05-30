@@ -391,15 +391,6 @@ class EmbeddedDocument(_EmbeddedDocument):
 
     @classmethod
     def model(cls, api):
-        from pprint import pprint
-
-        if cls._class_name == "StartTimes":
-            from pprint import pprint
-
-            pprint(
-                {k: v.__dict__ for k, v in cls._fields.items() if k == "daysOfTheWeek"}
-            )
-
         return {
             **cls.base(),
             **{
