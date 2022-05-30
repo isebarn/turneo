@@ -1,43 +1,48 @@
 import pytest
 import requests
 
-
-def clean(url):
-    response = requests.get(url.format("/api/experience"))
-    experiences = response.json()
-
-    for experience in experiences:
-        requests.delete(url.format("/api/experience/{}".format(experience["id"])))
-
-    response = requests.get(url.format("/api/rates"))
-    rates = response.json()
-
-    for rate in rates:
-        requests.delete(url.format("/api/rates/{}".format(rate["id"])))
+url = "http://127.0.0.1:5000/api/{}"
 
 
-def get(endpoint, query=""):
-    url = "http://127.0.0.1:5000/api/{}{}"
-    response = requests.get(url.format(endpoint, query))
+def delete(table):
+    response = requests.get(url.format("{}".format(table)))
+    items = response.json()
+
+    for item in items:
+        requests.delete(url.format("{}/{}".format(table, item["id"])))
+
+
+def clean():
+    for item in ["experiences", "rates", "bookings"]:
+        delete(item)
+
+
+def get(endpoint):
+    response = requests.get(url.format(endpoint))
     return response.json()
 
 
 def post(endpoint, data):
-    url = "http://127.0.0.1:5000/api/{}"
     response = requests.post(url.format(endpoint), json=data)
     return response.json()
 
 
 def patch(endpoint, data):
-    url = "http://127.0.0.1:5000/api/{}"
     response = requests.patch(url.format(endpoint), json=data)
     return response.json()
 
 
 def put(endpoint, data):
-    url = "http://127.0.0.1:5000/api/{}"
     response = requests.put(url.format(endpoint), json=data)
     return response.json()
+
+
+def assert_count(query, count):
+    return len(get(query)) == count
+
+
+def return_one(query):
+    return get(query)[0]
 
 
 # test post + get
@@ -48,103 +53,84 @@ def put(endpoint, data):
 # test patch + get
 # test put + get
 def test_experience():
-    url = "http://127.0.0.1:5000{}"
-    clean(url)
+    clean()
 
-    rates_1 = post(
-        "rates",
+    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 10})
+    assert assert_count("experiences", 1)
+
+    exp_2 = post("experiences", {"name": "exp_2", "cutOffTime": 20})
+    assert assert_count("experiences", 2)
+    assert assert_count("experiences?name=exp_2", 1)
+    assert assert_count("experiences?cutOffTime__gt=15", 1)
+    assert assert_count("experiences?cutOffTime__gt=19", 1)
+    assert assert_count("experiences?cutOffTime__gte=19", 1)
+    assert assert_count("experiences?cutOffTime__gte=20", 1)
+    assert assert_count("experiences?cutOffTime__gt=20", 0)
+    assert assert_count("experiences?cutOffTime__lt=20", 1)
+    assert assert_count("experiences?cutOffTime__lte=20", 2)
+
+    exp_3 = post(
+        "experiences",
         {
-            "maxParticipants": 5,
-            "dateRange": {"start": "2022-01-01", "until": "2022-01-03"},
+            "name": "exp_3",
+            "cutOffTime": 20,
+            "organizer": {"name": "Jack", "organizerType": "Cars"},
+        },
+    )
+    assert assert_count("experiences?", 3)
+    assert assert_count("experiences?organizer__exists", 1)
+    assert assert_count("experiences?organizer__name=Jack", 1)
+    assert assert_count(
+        "experiences?organizer__name=Jack&organizer__organizerType=Cars", 1
+    )
+    assert "organizer" in return_one("experiences?organizer__exists")
+    assert "name" in return_one("experiences?organizer__exists")["organizer"]
+    assert "organizerType" in return_one("experiences?organizer__exists")["organizer"]
+
+    exp_4 = post(
+        "experiences",
+        {
+            "name": "exp_4",
+            "cutOffTime": 20,
+            "organizer": {"name": "John", "organizerType": "Boats"},
+        },
+    )
+    assert assert_count("experiences?", 4)
+    assert assert_count("experiences?$limit=2", 2)
+    assert assert_count("experiences?$skip=1", 3)
+    assert assert_count("experiences?organizer__exists", 2)
+    assert assert_count("experiences?$limit=1&organizer__exists", 1)
+    assert assert_count("experiences?$skip=1&organizer__exists", 1)
+    assert assert_count("experiences?organizer__name=Jack", 1)
+    assert "organizer" in return_one("experiences?organizer__name=Jack")
+    assert "name" in return_one("experiences?organizer__name=Jack")["organizer"]
+    assert return_one("experiences?organizer__name=Jack")["organizer"]["name"] == "Jack"
+    assert (
+        "organizerType" in return_one("experiences?organizer__name=Jack")["organizer"]
+    )
+
+    exp_5 = post(
+        "experiences",
+        {
+            "name": "exp_5",
+            "cutOffTime": 20,
+            "organizer": {"name": "John", "organizerType": "Boats"},
+            "images": [
+                {
+                    "urlHigh": "High_1",
+                    "urlLow": "Low_1",
+                },
+                {
+                    "urlHigh": "High_2",
+                    "urlLow": "Low_2",
+                },
+            ],
         },
     )
 
-    assert len(get("rates")) == 1
-    assert len(get("rates?dateRange__start__gte=2022-01-01")) == 1
-
-    rates_2 = post(
-        "rates",
-        {
-            "maxParticipants": 5,
-            "dateRange": {"start": "2022-01-02", "until": "2022-01-03"},
-        },
-    )
-
-    assert len(get("rates")) == 2
-    assert len(get("rates?dateRange__start__gte=2022-01-02")) == 1
-
-    rates_3 = post(
-        "rates",
-        {
-            "maxParticipants": 6,
-            "dateRange": {"start": "2022-01-03", "until": "2022-01-05"},
-        },
-    )
-
-    assert len(get("rates")) == 3
-    assert len(get("rates?dateRange__start__gte=2022-01-02")) == 2
-    assert (
-        len(
-            get(
-                "rates?dateRange__start__gte=2022-01-02&dateRange__start__lte=2022-01-03"
-            )
-        )
-        == 2
-    )
-    assert (
-        len(
-            get(
-                "rates?\
-                dateRange__start__gte=2022-01-02&\
-                dateRange__start__lte=\2022-01-03&\
-                dateRange__until__gte=2022-01-04"
-            )
-        )
-        == 1
-    )
-
-    patch("rates/{}".format(rates_3["id"]), {"dateRange": {"until": "2022-01-10"}})
-    assert (
-        len(
-            get(
-                "rates?\
-                dateRange__until__gte=2022-01-010"
-            )
-        )
-        == 1
-    )
-
-
-# test post(rate) + get
-# test post(rate + experience) + get
-# test post(rate + experience) + get + include
-# test post(rate + experience) + get + filter
-# test post(rate + experience) + get + filter + include
-# test patch + get + filter + include
-# test put + get + filter + include
-# test patch(experience) + get + filter + include
-def test_rates():
-    url = "http://127.0.0.1:5000{}"
-    clean(url)
-
-
-# post normal + get
-# patch embed + get
-# put embed + get
-# post embed + get
-# patch embed + get
-# put embed + get
-def test_embedded():
-    url = "http://127.0.0.1:5000{}"
-    clean(url)
-
-    pass
-
-
-# post normal + get
-# patch embed + get
-def test_embedded_list():
-    url = "http://127.0.0.1:5000{}"
-    clean(url)
-
-    pass
+    assert assert_count("experiences?", 5)
+    assert assert_count("experiences?images__exists", 5)
+    assert assert_count("experiences?images__ne=[]", 1)
+    assert assert_count("experiences?images__0__urlHigh=High_1", 1)
+    assert assert_count("experiences?images__1__urlHigh=High_2", 1)
+    assert get("experiences/{}".format(exp_5["id"]))
