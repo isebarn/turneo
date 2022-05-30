@@ -391,6 +391,15 @@ class EmbeddedDocument(_EmbeddedDocument):
 
     @classmethod
     def model(cls, api):
+        from pprint import pprint
+
+        if cls._class_name == "StartTimes":
+            from pprint import pprint
+
+            pprint(
+                {k: v.__dict__ for k, v in cls._fields.items() if k == "daysOfTheWeek"}
+            )
+
         return {
             **cls.base(),
             **{
@@ -478,7 +487,7 @@ class Excluded(EmbeddedDocument):
     exclusion_id = StringField()
 
 
-class Experience(Extended):
+class Experiences(Extended):
     name = StringField()
     code = StringField()
     category = StringField()
@@ -530,9 +539,8 @@ class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
 
-
 class Rates(Extended):
-    experience = ReferenceField(Experience, reverse_delete_rule=NULLIFY)
+    experiences = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
     dateRange = EmbeddedDocumentField(DateRange)
@@ -556,7 +564,7 @@ class RatesQuantity(EmbeddedDocument):
     quantity = IntField()
 
 
-class Booking(Extended):
+class Bookings(Extended):
     rates = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
     startDate = DateTimeField()
     startTime = StringField()
@@ -566,22 +574,23 @@ class Booking(Extended):
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
+
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()

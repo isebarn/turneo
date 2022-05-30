@@ -91,9 +91,9 @@ included_full = api.model('included', models.Included.model(api))
 excluded_base = api.model('excluded_base', models.Excluded.base())
 excluded_reference = api.model('excluded_reference', models.Excluded.reference())
 excluded_full = api.model('excluded', models.Excluded.model(api))
-experience_base = api.model('experience_base', models.Experience.base())
-experience_reference = api.model('experience_reference', models.Experience.reference())
-experience_full = api.model('experience', models.Experience.model(api))
+experiences_base = api.model('experiences_base', models.Experiences.base())
+experiences_reference = api.model('experiences_reference', models.Experiences.reference())
+experiences_full = api.model('experiences', models.Experiences.model(api))
 minimumGroupRetailPrice_base = api.model('minimumGroupRetailPrice_base', models.MinimumGroupRetailPrice.base())
 minimumGroupRetailPrice_reference = api.model('minimumGroupRetailPrice_reference', models.MinimumGroupRetailPrice.reference())
 minimumGroupRetailPrice_full = api.model('minimumGroupRetailPrice', models.MinimumGroupRetailPrice.model(api))
@@ -124,47 +124,47 @@ notes_full = api.model('notes', models.Notes.model(api))
 ratesQuantity_base = api.model('ratesQuantity_base', models.RatesQuantity.base())
 ratesQuantity_reference = api.model('ratesQuantity_reference', models.RatesQuantity.reference())
 ratesQuantity_full = api.model('ratesQuantity', models.RatesQuantity.model(api))
-booking_base = api.model('booking_base', models.Booking.base())
-booking_reference = api.model('booking_reference', models.Booking.reference())
-booking_full = api.model('booking', models.Booking.model(api))
+bookings_base = api.model('bookings_base', models.Bookings.base())
+bookings_reference = api.model('bookings_reference', models.Bookings.reference())
+bookings_full = api.model('bookings', models.Bookings.model(api))
 
 
-@api.route("/experience")
-class ExperienceController(Resource):
+@api.route("/experiences")
+class ExperiencesController(Resource):
 
-    @api.marshal_list_with(api.models.get('experience'), skip_none=True)
+    @api.marshal_list_with(api.models.get('experiences'), skip_none=True)
     def get(self):
-        return models.Experience.fetch(request.args)
+        return models.Experiences.fetch(request.args)
 
-    @api.marshal_with(api.models.get('experience'), skip_none=True)
+    @api.marshal_with(api.models.get('experiences'), skip_none=True)
     def post(self):
-        return models.Experience.post(request.get_json())
+        return models.Experiences.post(request.get_json())
 
-    @api.marshal_with(api.models.get('experience'), skip_none=True)
+    @api.marshal_with(api.models.get('experiences'), skip_none=True)
     def put(self):
-        return models.Experience.put(request.get_json())
+        return models.Experiences.put(request.get_json())
 
-    @api.marshal_with(api.models.get('experience'), skip_none=True)
+    @api.marshal_with(api.models.get('experiences'), skip_none=True)
     def patch(self):
-        return models.Experience.patch(request.get_json())
+        return models.Experiences.patch(request.get_json())
 
 
-@api.route("/experience/<experience_id>")
-class BaseExperienceController(Resource):
-    @api.marshal_with(api.models.get("experience"), skip_none=True)
-    def get(self, experience_id):
-        return models.Experience.objects.get(id=experience_id).to_json()
+@api.route("/experiences/<experiences_id>")
+class BaseExperiencesController(Resource):
+    @api.marshal_with(api.models.get("experiences"), skip_none=True)
+    def get(self, experiences_id):
+        return models.Experiences.objects.get(id=experiences_id).to_json()
 
-    @api.marshal_with(api.models.get('experience'), skip_none=True)
-    def put(self, experience_id):
-        return models.Experience.put({"id": experience_id, **request.get_json()})
+    @api.marshal_with(api.models.get('experiences'), skip_none=True)
+    def put(self, experiences_id):
+        return models.Experiences.put({"id": experiences_id, **request.get_json()})
 
-    @api.marshal_with(api.models.get('experience'), skip_none=True)
-    def patch(self, experience_id):
-        return models.Experience.patch({"id": experience_id, **request.get_json()})
+    @api.marshal_with(api.models.get('experiences'), skip_none=True)
+    def patch(self, experiences_id):
+        return models.Experiences.patch({"id": experiences_id, **request.get_json()})
 
-    def delete(self, experience_id):
-        return models.Experience.get(id=experience_id).delete()
+    def delete(self, experiences_id):
+        return models.Experiences.get(id=experiences_id).delete()
 
 
 @api.route("/rates")
@@ -205,42 +205,42 @@ class BaseRatesController(Resource):
         return models.Rates.get(id=rates_id).delete()
 
 
-@api.route("/booking")
-class BookingController(Resource):
+@api.route("/bookings")
+class BookingsController(Resource):
 
-    @api.marshal_list_with(api.models.get('booking'), skip_none=True)
+    @api.marshal_list_with(api.models.get('bookings'), skip_none=True)
     def get(self):
-        return models.Booking.fetch(request.args)
+        return models.Bookings.fetch(request.args)
 
-    @api.marshal_with(api.models.get('booking'), skip_none=True)
+    @api.marshal_with(api.models.get('bookings'), skip_none=True)
     def post(self):
-        return models.Booking.post(request.get_json())
+        return models.Bookings.post(request.get_json())
 
-    @api.marshal_with(api.models.get('booking'), skip_none=True)
+    @api.marshal_with(api.models.get('bookings'), skip_none=True)
     def put(self):
-        return models.Booking.put(request.get_json())
+        return models.Bookings.put(request.get_json())
 
-    @api.marshal_with(api.models.get('booking'), skip_none=True)
+    @api.marshal_with(api.models.get('bookings'), skip_none=True)
     def patch(self):
-        return models.Booking.patch(request.get_json())
+        return models.Bookings.patch(request.get_json())
 
 
-@api.route("/booking/<booking_id>")
-class BaseBookingController(Resource):
-    @api.marshal_with(api.models.get("booking"), skip_none=True)
-    def get(self, booking_id):
-        return models.Booking.objects.get(id=booking_id).to_json()
+@api.route("/bookings/<bookings_id>")
+class BaseBookingsController(Resource):
+    @api.marshal_with(api.models.get("bookings"), skip_none=True)
+    def get(self, bookings_id):
+        return models.Bookings.objects.get(id=bookings_id).to_json()
 
-    @api.marshal_with(api.models.get('booking'), skip_none=True)
-    def put(self, booking_id):
-        return models.Booking.put({"id": booking_id, **request.get_json()})
+    @api.marshal_with(api.models.get('bookings'), skip_none=True)
+    def put(self, bookings_id):
+        return models.Bookings.put({"id": bookings_id, **request.get_json()})
 
-    @api.marshal_with(api.models.get('booking'), skip_none=True)
-    def patch(self, booking_id):
-        return models.Booking.patch({"id": booking_id, **request.get_json()})
+    @api.marshal_with(api.models.get('bookings'), skip_none=True)
+    def patch(self, bookings_id):
+        return models.Bookings.patch({"id": bookings_id, **request.get_json()})
 
-    def delete(self, booking_id):
-        return models.Booking.get(id=booking_id).delete()
+    def delete(self, bookings_id):
+        return models.Bookings.get(id=bookings_id).delete()
 
 
 
