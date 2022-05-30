@@ -129,12 +129,16 @@ class Extended(Document):
         def f(v):
             if isinstance(v, dict) and "$oid" in v:
                 return v["$oid"]
+            elif isinstance(v, dict) and "_cls" in v:
+                v.pop("_cls")
+                return v
             elif isinstance(v, list):
                 return list(map(lambda x: f(x), v))
             else:
                 return v
 
         data = {**{k: f(v) for k, v in loads(json_util.dumps(self.to_mongo())).items()}}
+        data.pop("_cls")
         data.update({"id": data.pop("_id")})
 
         return data
@@ -278,6 +282,7 @@ class Extended(Document):
                 )
                 for field, instance in cls._fields.items()
                 if isinstance(instance, ListField)
+                or isinstance(instance, EmbeddedDocumentListField)
             },
         }
 
@@ -375,7 +380,7 @@ class EmbeddedDocument(_EmbeddedDocument):
                 key: getattr(cls, key).marshal
                 for key, value in list(cls._fields.items())
                 if hasattr(getattr(cls, key), "marshal")
-            }
+            },
         }
 
     @classmethod
@@ -388,6 +393,38 @@ class EmbeddedDocument(_EmbeddedDocument):
     def model(cls, api):
         return {
             **cls.base(),
+            **{
+                field: Nested(api.models.get(field), skip_none=True)
+                for field, instance in cls._fields.items()
+                if isinstance(instance, ReferenceField)
+                or isinstance(instance, DictField)
+                or isinstance(instance, EmbeddedDocumentField)
+            },
+            **{
+                field: List(
+                    Nested(
+                        api.models.get(field),
+                        skip_none=True,
+                    ),
+                )
+                for field, instance in cls._fields.items()
+                if (
+                    isinstance(instance, ListField)
+                    or isinstance(instance, EmbeddedDocumentListField)
+                )
+                and (
+                    isinstance(instance.field, ReferenceField)
+                    or isinstance(instance.field, EmbeddedDocumentField)
+                )
+            },
+            **{
+                field: List(instance.field.marshal)
+                for field, instance in cls._fields.items()
+                if (
+                    isinstance(instance, ListField)
+                    or isinstance(instance, EmbeddedDocumentListField)
+                )
+            },
         }
 
 
@@ -493,6 +530,7 @@ class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
 
+
 class Rates(Extended):
     experience = ReferenceField(Experience, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
@@ -528,23 +566,22 @@ class Booking(Extended):
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
-
 # def config():
-    # signals.pre_save.connect(Class.pre_save, sender=Class)
-    # signals.post_save.connect(Class.post_save, sender=Class)
+# signals.pre_save.connect(Class.pre_save, sender=Class)
+# signals.post_save.connect(Class.post_save, sender=Class)
 
-    # seed
-    # logging.info("Seeding database")
-    # seed = load(open("models/seed.json"))
+# seed
+# logging.info("Seeding database")
+# seed = load(open("models/seed.json"))
 
-    # helper method to remove "_id" and "_cls" so I can compare json objects
-    # from the db
-    # def remove_meta_from_dict_item(item):
-    #     item.pop("_cls")
-    #     item.pop("_id")
-    #     for key, value in item.items():
-    #         if isinstance(value, dict):
-    #             remove_meta_from_dict_item(value)
+# helper method to remove "_id" and "_cls" so I can compare json objects
+# from the db
+# def remove_meta_from_dict_item(item):
+#     item.pop("_cls")
+#     item.pop("_id")
+#     for key, value in item.items():
+#         if isinstance(value, dict):
+#             remove_meta_from_dict_item(value)
 
 
 # config()
