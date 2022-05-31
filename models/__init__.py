@@ -33,6 +33,8 @@ from flask_restx.fields import Nested
 from flask_restx.fields import String
 from flask_restx.fields import Boolean
 from flask_restx.fields import Raw
+from models.query_sets import ExperienceQuerySet
+from models.query_sets import RatesQuerySet
 
 
 class DateTimeField(_DateTimeField):
@@ -305,6 +307,17 @@ class Extended(Document):
         }
 
     @classmethod
+    def qry(cls, filters):
+        if hasattr(cls._meta["queryset_class"], "default"):
+            return cls.objects.default(cls, filters)
+
+        if "$queryset" in filters:
+            return getattr(cls.objects, filters.pop("$queryset"))(cls, filters)
+
+        else:
+            return cls.fetch(filters)
+
+    @classmethod
     def fetch(cls, filters):
         include = filters.pop("$include", "").split(",")
         data = [x.to_json() for x in list(cls.get(**filters))]
@@ -480,10 +493,12 @@ class Excluded(EmbeddedDocument):
 
 
 class Experiences(Extended):
-    sort_by = '-rating__score'
+    meta = {"queryset_class": ExperienceQuerySet}
+    sort_by = "-rating__score"
+
     name = StringField()
     code = StringField()
-    status = StringField(default='draft')
+    status = StringField(default="draft")
     category = StringField()
     highlight = StringField()
     description = StringField()
@@ -506,7 +521,7 @@ class Experiences(Extended):
 
 class MinimumGroupRetailPrice(EmbeddedDocument):
     amount = IntField()
-    currency = StringField(default='EUR')
+    currency = StringField(default="EUR")
 
 
 class PrivateGroup(EmbeddedDocument):
@@ -520,7 +535,7 @@ class DateRange(EmbeddedDocument):
 
 
 class RetailPrice(EmbeddedDocument):
-    currency = StringField(default='EUR')
+    currency = StringField(default="EUR")
     amount = IntField()
 
 
@@ -533,7 +548,9 @@ class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
 
+
 class Rates(Extended):
+    meta = {"queryset_class": RatesQuerySet}
     experiences = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
@@ -568,23 +585,22 @@ class Bookings(Extended):
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
-
 # def config():
-    # signals.pre_save.connect(Class.pre_save, sender=Class)
-    # signals.post_save.connect(Class.post_save, sender=Class)
+# signals.pre_save.connect(Class.pre_save, sender=Class)
+# signals.post_save.connect(Class.post_save, sender=Class)
 
-    # seed
-    # logging.info("Seeding database")
-    # seed = load(open("models/seed.json"))
+# seed
+# logging.info("Seeding database")
+# seed = load(open("models/seed.json"))
 
-    # helper method to remove "_id" and "_cls" so I can compare json objects
-    # from the db
-    # def remove_meta_from_dict_item(item):
-    #     item.pop("_cls")
-    #     item.pop("_id")
-    #     for key, value in item.items():
-    #         if isinstance(value, dict):
-    #             remove_meta_from_dict_item(value)
+# helper method to remove "_id" and "_cls" so I can compare json objects
+# from the db
+# def remove_meta_from_dict_item(item):
+#     item.pop("_cls")
+#     item.pop("_id")
+#     for key, value in item.items():
+#         if isinstance(value, dict):
+#             remove_meta_from_dict_item(value)
 
 
 # config()
