@@ -42,6 +42,12 @@ class Resource(_Resource):
                 if k.endswith("__in")
             ]
 
+            [
+                tmp.update({k: v.split(",")})
+                for k, v in tmp.items()
+                if k.startswith("$sort")
+            ]            
+
         if request.method == "POST":
             json = request.get_json()
 

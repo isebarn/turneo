@@ -223,6 +223,7 @@ class Extended(Document):
 
         return (
             cls.objects(**filters)
+            .order_by(*kwargs.get("$sort", [getattr(cls, "sort_by", None)]))
             .skip(int(kwargs.get("$skip", 0)))
             .limit(int(kwargs.get("$limit", 0)))
         )
@@ -479,8 +480,10 @@ class Excluded(EmbeddedDocument):
 
 
 class Experiences(Extended):
+    sort_by = '-rating__score'
     name = StringField()
     code = StringField()
+    status = StringField(default='draft')
     category = StringField()
     highlight = StringField()
     description = StringField()
@@ -503,7 +506,7 @@ class Experiences(Extended):
 
 class MinimumGroupRetailPrice(EmbeddedDocument):
     amount = IntField()
-    currency = StringField()
+    currency = StringField(default='EUR')
 
 
 class PrivateGroup(EmbeddedDocument):
@@ -517,7 +520,7 @@ class DateRange(EmbeddedDocument):
 
 
 class RetailPrice(EmbeddedDocument):
-    currency = StringField()
+    currency = StringField(default='EUR')
     amount = IntField()
 
 
@@ -529,7 +532,6 @@ class RateTypesPrices(EmbeddedDocument):
 class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
-
 
 class Rates(Extended):
     experiences = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
@@ -566,22 +568,23 @@ class Bookings(Extended):
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
+
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()
