@@ -16,7 +16,7 @@ class RatesQuerySet(QuerySet):
         return list(cls.objects().aggregate(pipeline))
 
 
-class ExperienceQuerySet(QuerySet):
+class ExperiencesQuerySet(QuerySet):
     def default(self, cls, filters):
         experiences = cls.fetch(filters)
 
@@ -35,3 +35,8 @@ class ExperienceQuerySet(QuerySet):
                 )
 
         return experiences
+
+
+class BookingsQuerySet(QuerySet):
+    pass
+
