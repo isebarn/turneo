@@ -134,3 +134,8 @@ def test_experience():
     assert assert_count("experiences?images__0__urlHigh=High_1", 1)
     assert assert_count("experiences?images__1__urlHigh=High_2", 1)
     assert get("experiences/{}".format(exp_5["id"]))
+    assert "images" in get("experiences/{}".format(exp_5["id"]))
+    assert get("experiences/{}".format(exp_5["id"]))["images"][0]["urlHigh"]
+    assert get("experiences/{}".format(exp_5["id"]))["images"][0]["urlLow"]
+    assert get("experiences/{}".format(exp_5["id"]))["images"][1]["urlHigh"]
+    assert get("experiences/{}".format(exp_5["id"]))["images"][1]["urlLow"]
