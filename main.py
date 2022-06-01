@@ -13,11 +13,9 @@ from bson.objectid import ObjectId
 from endpoints import api as _api
 from extensions import api_list
 
-
 for item in os.listdir("endpoints"):
     if item.endswith(".py") and not item == "__init__.py":
         __import__("endpoints.{}".format(item.split(".py")[0]))
-
 
 app = Flask("api")
 app.config["PROPAGATE_EXCEPTIONS"] = False
@@ -26,8 +24,7 @@ api = Api(app)
 api.add_namespace(_api)
 
 for extension in api_list:
-    api.add_namespace(extension)
-
+	api.add_namespace(extension)
 
 @api.errorhandler(DoesNotExist)
 def handle_no_result_exception(error):

@@ -16,10 +16,8 @@ class RatesQuerySet(QuerySet):
             )
         )
 
-    def query_by_experience(self, cls, experience_id):
-        return requests.get(
-            "http://localhost:5000/api/rates?experiences__id={}".format(experience_id)
-        ).json()
+    def query_by_experience(self, cls, query):
+        return requests.get("http://localhost:5000/api/rates?{}".format(query)).json()
 
 
 class ExperiencesQuerySet(QuerySet):
