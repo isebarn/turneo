@@ -214,3 +214,97 @@ def test_experience_default_values():
 
     patch("experiences/{}".format(exp_1["id"]), {"status": "active"})
     assert assert_count("experiences?status=active", 2)
+
+
+# test post + get
+# test post + get check sort
+# test post + get + manual sort
+# test post + get + sort two
+def test_experience_minimum_rate():
+    clean()
+
+    exp_1 = post("experiences", {"name": "exp_1"})
+    exp_2 = post("experiences", {"name": "exp_2"})
+    exp_3 = post("experiences", {"name": "exp_3"})
+
+    # exp_1 will have two rates. 10 will be the lowest
+    rate_1_exp_1 = post(
+        "rates",
+        {
+            "experiences": exp_1["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 50}},
+                {"retailPrice": {"amount": 40}},
+                {"retailPrice": {"amount": 30}},
+            ],
+        },
+    )
+    rate_2_exp_1 = post(
+        "rates",
+        {
+            "experiences": exp_1["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 100}},
+                {"retailPrice": {"amount": 10}},
+                {"retailPrice": {"amount": 30}},
+            ],
+        },
+    )
+
+    assert (
+        get("experiences?id={}".format(exp_1["id"]))[0]["minimumRate"]["amount"] == 10
+    )
+
+    # exp_2 will have two rates. 20 will be the lowest in two different places
+    rate_1_exp_2 = post(
+        "rates",
+        {
+            "experiences": exp_2["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 50}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 30}},
+            ],
+        },
+    )
+    rate_2_exp_2 = post(
+        "rates",
+        {
+            "experiences": exp_2["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 100}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 30}},
+            ],
+        },
+    )
+
+    assert (
+        get("experiences?id={}".format(exp_2["id"]))[0]["minimumRate"]["amount"] == 20
+    )
+
+    # exp_3 will have one rate. 0 will be the lowest
+    rate_1_exp_3 = post(
+        "rates",
+        {
+            "experiences": exp_3["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 50}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 30}},
+            ],
+        },
+    )
+    rate_2_exp_3 = post(
+        "rates",
+        {
+            "experiences": exp_3["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 100}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 0}},
+            ],
+        },
+    )
+
+    assert get("experiences?id={}".format(exp_3["id"]))[0]["minimumRate"]["amount"] == 0
