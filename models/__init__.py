@@ -25,6 +25,7 @@ from mongoengine import FloatField as _FloatField
 from mongoengine import IntField as _IntField
 from mongoengine import BooleanField as _BooleanField
 from mongoengine import StringField as _StringField
+from mongoengine import PointField as _PointField
 from flask_restx.fields import DateTime
 from flask_restx.fields import Float
 from flask_restx.fields import Integer
@@ -39,6 +40,14 @@ from models.query_sets import RatesQuerySet
 from models.query_sets import BookingsQuerySet
 ## EXTRA
 
+
+class PointField(_PointField):
+    class ReturnObject(Raw):
+        def format(self, value):
+            return value
+
+    marshal = ReturnObject
+    
 
 class DateTimeField(_DateTimeField):
     class ISOFormat(DateTime):
@@ -455,6 +464,7 @@ class MeetingPoint(EmbeddedDocument):
     address = StringField()
     city = StringField()
     country = StringField()
+    location = PointField()
     gmapsLink = StringField()
 
 

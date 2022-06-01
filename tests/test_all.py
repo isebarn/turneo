@@ -216,10 +216,6 @@ def test_experience_default_values():
     assert assert_count("experiences?status=active", 2)
 
 
-# test post + get
-# test post + get check sort
-# test post + get + manual sort
-# test post + get + sort two
 def test_experience_minimum_rate():
     clean()
 
@@ -252,7 +248,8 @@ def test_experience_minimum_rate():
     )
 
     assert (
-        get("experiences?id={}".format(exp_1["id"]))[0]["minimumRate"]["amount"] == 10
+        return_one("experiences?id={}".format(exp_1["id"]))["minimumRate"]["amount"]
+        == 10
     )
 
     # exp_2 will have two rates. 20 will be the lowest in two different places
@@ -280,7 +277,8 @@ def test_experience_minimum_rate():
     )
 
     assert (
-        get("experiences?id={}".format(exp_2["id"]))[0]["minimumRate"]["amount"] == 20
+        return_one("experiences?id={}".format(exp_2["id"]))["minimumRate"]["amount"]
+        == 20
     )
 
     # exp_3 will have one rate. 0 will be the lowest
@@ -307,4 +305,32 @@ def test_experience_minimum_rate():
         },
     )
 
-    assert get("experiences?id={}".format(exp_3["id"]))[0]["minimumRate"]["amount"] == 0
+    assert (
+        return_one("experiences?id={}".format(exp_3["id"]))["minimumRate"]["amount"]
+        == 0
+    )
+
+
+def test_experience_minimum_rate():
+    clean()
+
+    exp_1 = post("experiences", {"name": "exp_1"})
+    exp_2 = post(
+        "experiences", {"name": "exp_2", "meetingPoint": {"location": [20.0, 0.12]}}
+    )
+    exp_3 = post(
+        "experiences",
+        {
+            "name": "exp_3",
+            "meetingPoint": {"location": {"type": "Point", "coordinates": [50, 0.5]}},
+        },
+    )
+
+    assert_count("experiences", 3)
+    assert assert_count("experiences?meetingPoint__exists", 2)
+    assert return_one("experiences?meetingPoint__exists&name=exp_3").get(
+        "meetingPoint"
+    ).get("location").get("coordinates") == [50, 0.5]
+    assert return_one("experiences?meetingPoint__exists&name=exp_2").get(
+        "meetingPoint"
+    ).get("location").get("coordinates") == [20, 0.12]

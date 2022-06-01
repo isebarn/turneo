@@ -40,3 +40,8 @@ class ExperiencesQuerySet(QuerySet):
 class BookingsQuerySet(QuerySet):
     pass
 
+
+
+class TestQuerySet(QuerySet):
+    pass
+
