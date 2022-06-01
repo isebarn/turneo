@@ -501,7 +501,7 @@ class Experiences(Extended):
     sort_by = '-rating__score'
     name = StringField()
     code = StringField()
-    status = StringField(default='draft')
+    status = StringField(default="draft")
     category = StringField()
     highlight = StringField()
     description = StringField()
@@ -524,7 +524,7 @@ class Experiences(Extended):
 
 class MinimumGroupRetailPrice(EmbeddedDocument):
     amount = IntField()
-    currency = StringField(default='EUR')
+    currency = StringField(default="EUR")
 
 
 class PrivateGroup(EmbeddedDocument):
@@ -533,12 +533,12 @@ class PrivateGroup(EmbeddedDocument):
 
 
 class DateRange(EmbeddedDocument):
-    start = DateTimeField()
-    until = DateTimeField()
+    fromDate = DateTimeField()
+    untilDate = DateTimeField()
 
 
 class RetailPrice(EmbeddedDocument):
-    currency = StringField(default='EUR')
+    currency = StringField(default="EUR")
     amount = IntField()
 
 
@@ -582,8 +582,7 @@ class Bookings(Extended):
     meta = {'queryset_class': BookingsQuerySet}
 
     rates = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
-    startDate = DateTimeField()
-    startTime = StringField()
+    start = DateTimeField()
     privateGroup = StringField()
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
