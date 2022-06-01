@@ -5,15 +5,21 @@ from bson.objectid import ObjectId
 
 class RatesQuerySet(QuerySet):
     def minimum(self, cls, filters):
+        return list(
+            cls.objects().aggregate(
+                [
+                    {"$match": {"experiences": ObjectId(filters.get("experiences"))}},
+                    {"$unwind": "$rateTypesPrices"},
+                    {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
+                    {"$limit": 1},
+                ]
+            )
+        )
 
-        pipeline = [
-            {"$match": {"experiences": ObjectId(filters.get("experiences"))}},
-            {"$unwind": "$rateTypesPrices"},
-            {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
-            {"$limit": 1},
-        ]
-
-        return list(cls.objects().aggregate(pipeline))
+    def query_by_experience(self, cls, experience_id):
+        return requests.get(
+            "http://localhost:5000/api/rates?experiences__id={}".format(experience_id)
+        ).json()
 
 
 class ExperiencesQuerySet(QuerySet):
@@ -41,7 +47,5 @@ class BookingsQuerySet(QuerySet):
     pass
 
 
-
 class TestQuerySet(QuerySet):
     pass
-
