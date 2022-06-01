@@ -350,3 +350,13 @@ def test_experience_id_rates():
 
     assert assert_count("experiences/{}/rates".format(exp_1["id"]), 2)
     assert assert_count("experiences/{}/rates".format(exp_2["id"]), 3)
+    assert assert_count("experiences/{}/rates?maxParticipants=2".format(exp_2["id"]), 1)
+    assert assert_count(
+        "experiences/{}/rates?maxParticipants__gt=2".format(exp_2["id"]), 2
+    )
+    assert assert_count(
+        "experiences/{}/rates?maxParticipants__lt=2".format(exp_2["id"]), 0
+    )
+    assert assert_count(
+        "experiences/{}/rates?maxParticipants__gte=2".format(exp_2["id"]), 3
+    )
