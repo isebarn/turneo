@@ -136,9 +136,6 @@ ratesQuantity_full = api.model('ratesQuantity', models.RatesQuantity.model(api))
 bookings_base = api.model('bookings_base', models.Bookings.base())
 bookings_reference = api.model('bookings_reference', models.Bookings.reference())
 bookings_full = api.model('bookings', models.Bookings.model(api))
-test_base = api.model('test_base', models.Test.base())
-test_reference = api.model('test_reference', models.Test.reference())
-test_full = api.model('test', models.Test.model(api))
 experiences_full = api.clone("experiences", experiences_full, {"minimumRate": Nested(retailPrice_full)})
 
 @api.route("/experiences")
@@ -250,43 +247,6 @@ class BaseBookingsController(Resource):
 
     def delete(self, bookings_id):
         return models.Bookings.get(id=bookings_id).delete()
-
-
-@api.route("/test")
-class TestController(Resource):
-    @api.marshal_list_with(api.models.get("test"), skip_none=True)
-    def get(self):
-        return models.Test.qry(request.args)
-
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def post(self):
-        return models.Test.post(request.get_json())
-
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def put(self):
-        return models.Test.put(request.get_json())
-
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def patch(self):
-        return models.Test.patch(request.get_json())
-
-
-@api.route("/test/<test_id>")
-class BaseTestController(Resource):
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def get(self, test_id):
-        return models.Test.objects.get(id=test_id).to_json()
-
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def put(self, test_id):
-        return models.Test.put({"id": test_id, **request.get_json()})
-
-    @api.marshal_with(api.models.get("test"), skip_none=True)
-    def patch(self, test_id):
-        return models.Test.patch({"id": test_id, **request.get_json()})
-
-    def delete(self, test_id):
-        return models.Test.get(id=test_id).delete()
 
 
 

@@ -38,7 +38,6 @@ from flask_restx.fields import Raw
 from models.query_sets import ExperiencesQuerySet
 from models.query_sets import RatesQuerySet
 from models.query_sets import BookingsQuerySet
-from models.query_sets import TestQuerySet
 ## EXTRA
 
 
@@ -271,10 +270,17 @@ class Extended(Document):
         return {
             **cls.base(),
             **{
-                field: Nested(api.models.get(field), skip_none=True)
+                field: Nested(
+                    api.models.get(instance.document_type_obj._meta["collection"]),
+                    skip_none=True,
+                )
                 for field, instance in cls._fields.items()
                 if isinstance(instance, ReferenceField)
-                or isinstance(instance, DictField)
+            },
+            **{
+                field: Nested(api.models.get(field), skip_none=True)
+                for field, instance in cls._fields.items()
+                if isinstance(instance, DictField)
                 or isinstance(instance, EmbeddedDocumentField)
             },
             **{
@@ -552,7 +558,7 @@ class StartTimes(EmbeddedDocument):
 class Rates(Extended):
     meta = {'queryset_class': RatesQuerySet}
 
-    experiences = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
+    experienceId = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
     dateRange = EmbeddedDocumentField(DateRange)
@@ -585,12 +591,6 @@ class Bookings(Extended):
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
-
-
-class Test(Extended):
-    meta = {'queryset_class': TestQuerySet}
-
-    name = StringField()
 
 
 

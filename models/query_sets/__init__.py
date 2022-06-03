@@ -8,7 +8,7 @@ class RatesQuerySet(QuerySet):
         return list(
             cls.objects().aggregate(
                 [
-                    {"$match": {"experiences": ObjectId(filters.get("experiences"))}},
+                    {"$match": {"experienceId": ObjectId(filters.get("experiences"))}},
                     {"$unwind": "$rateTypesPrices"},
                     {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
                     {"$limit": 1},
@@ -26,7 +26,7 @@ class ExperiencesQuerySet(QuerySet):
 
         for experience in experiences:
             rates = requests.get(
-                "http://localhost:5000/api/rates?$queryset=minimum&experiences={}".format(
+                "http://localhost:5000/api/rates?$queryset=minimum&experienceId={}".format(
                     experience["id"]
                 )
             )

@@ -227,7 +227,7 @@ def test_experience_minimum_rate():
     rate_1_exp_1 = post(
         "rates",
         {
-            "experiences": exp_1["id"],
+            "experienceId": exp_1["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 50}},
                 {"retailPrice": {"amount": 40}},
@@ -238,7 +238,7 @@ def test_experience_minimum_rate():
     rate_2_exp_1 = post(
         "rates",
         {
-            "experiences": exp_1["id"],
+            "experienceId": exp_1["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 100}},
                 {"retailPrice": {"amount": 10}},
@@ -256,7 +256,7 @@ def test_experience_minimum_rate():
     rate_1_exp_2 = post(
         "rates",
         {
-            "experiences": exp_2["id"],
+            "experienceId": exp_2["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 50}},
                 {"retailPrice": {"amount": 20}},
@@ -267,7 +267,7 @@ def test_experience_minimum_rate():
     rate_2_exp_2 = post(
         "rates",
         {
-            "experiences": exp_2["id"],
+            "experienceId": exp_2["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 100}},
                 {"retailPrice": {"amount": 20}},
@@ -285,7 +285,7 @@ def test_experience_minimum_rate():
     rate_1_exp_3 = post(
         "rates",
         {
-            "experiences": exp_3["id"],
+            "experienceId": exp_3["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 50}},
                 {"retailPrice": {"amount": 20}},
@@ -296,7 +296,7 @@ def test_experience_minimum_rate():
     rate_2_exp_3 = post(
         "rates",
         {
-            "experiences": exp_3["id"],
+            "experienceId": exp_3["id"],
             "rateTypesPrices": [
                 {"retailPrice": {"amount": 100}},
                 {"retailPrice": {"amount": 20}},
@@ -342,11 +342,11 @@ def test_experience_id_rates():
     exp_1 = post("experiences", {"name": "exp_1"})
     exp_2 = post("experiences", {"name": "exp_2"})
 
-    rate_1_exp_1 = post("rates", {"experiences": exp_1["id"], "maxParticipants": 10})
-    rate_2_exp_1 = post("rates", {"experiences": exp_1["id"], "maxParticipants": 20})
-    rate_1_exp_2 = post("rates", {"experiences": exp_2["id"], "maxParticipants": 5})
-    rate_2_exp_2 = post("rates", {"experiences": exp_2["id"], "maxParticipants": 2})
-    rate_2_exp_3 = post("rates", {"experiences": exp_2["id"], "maxParticipants": 6})
+    rate_1_exp_1 = post("rates", {"experienceId": exp_1["id"], "maxParticipants": 10})
+    rate_2_exp_1 = post("rates", {"experienceId": exp_1["id"], "maxParticipants": 20})
+    rate_1_exp_2 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 5})
+    rate_2_exp_2 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 2})
+    rate_2_exp_3 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 6})
 
     assert assert_count("experiences/{}/rates".format(exp_1["id"]), 2)
     assert assert_count("experiences/{}/rates".format(exp_2["id"]), 3)
