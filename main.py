@@ -7,9 +7,7 @@ from flask import request
 from flask_cors import CORS
 from flask_restx import Api
 from mongoengine import DoesNotExist
-from mongoengine import ValidationError
 from bson.objectid import ObjectId
-
 
 # Local application imports
 from endpoints import api as _api
@@ -27,8 +25,7 @@ api = Api(app)
 api.add_namespace(_api)
 
 for extension in api_list:
-    api.add_namespace(extension)
-
+	api.add_namespace(extension)
 
 @api.errorhandler(DoesNotExist)
 def handle_no_result_exception(error):
@@ -43,10 +40,5 @@ def handle_no_result_exception(error):
 
 
 @api.errorhandler
-def default_error_handler(error):
-    return {"message": str(error)}, getattr(error, "code", 500)
-
-
-@api.errorhandler(ValidationError)
 def default_error_handler(error):
     return {"message": str(error)}, getattr(error, "code", 500)

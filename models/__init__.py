@@ -39,7 +39,6 @@ from models.query_sets import ExperiencesQuerySet
 from models.query_sets import RatesQuerySet
 from models.query_sets import BookingsQuerySet
 from models.query_sets import TestQuerySet
-
 ## EXTRA
 
 
@@ -49,7 +48,7 @@ class PointField(_PointField):
             return value
 
     marshal = ReturnObject
-
+    
 
 class DateTimeField(_DateTimeField):
     class ISOFormat(DateTime):
@@ -155,7 +154,7 @@ class Extended(Document):
 
         data = {**{k: f(v) for k, v in loads(json_util.dumps(self.to_mongo())).items()}}
         data.pop("_cls")
-        data.update({"id": data.pop("_id", None)})
+        data.update({"id": data.pop("_id")})
 
         return data
 
@@ -244,18 +243,6 @@ class Extended(Document):
             .limit(int(kwargs.get("$limit", 0)))
         )
 
-    @classmethod
-    def post_save(cls, sender, document, **kwargs):
-        if kwargs.get("created"):
-            pass
-
-    @classmethod
-    def pre_save(cls, sender, document, **kwargs):
-        if (
-            document.to_json().get("_id")
-            and next(cls.objects(id=document.id)).status is not document.status
-        ):
-            pass
 
     @classmethod
     def base(cls):
@@ -329,7 +316,7 @@ class Extended(Document):
             return getattr(cls.objects, filters.pop("$queryset"))(cls, filters)
 
         else:
-            return cls.fetch(filters)
+            return cls.fetch(filters)        
 
     @classmethod
     def fetch(cls, filters):
@@ -508,9 +495,9 @@ class Excluded(EmbeddedDocument):
 
 
 class Experiences(Extended):
-    meta = {"queryset_class": ExperiencesQuerySet}
+    meta = {'queryset_class': ExperiencesQuerySet}
 
-    sort_by = "-rating__score"
+    sort_by = '-rating__score'
     name = StringField()
     code = StringField()
     status = StringField(default="draft")
@@ -562,9 +549,8 @@ class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
 
-
 class Rates(Extended):
-    meta = {"queryset_class": RatesQuerySet}
+    meta = {'queryset_class': RatesQuerySet}
 
     experiences = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
@@ -591,38 +577,39 @@ class RatesQuantity(EmbeddedDocument):
 
 
 class Bookings(Extended):
-    meta = {"queryset_class": BookingsQuerySet}
+    meta = {'queryset_class': BookingsQuerySet}
 
     rates = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
     start = DateTimeField()
-    privateGroup = BooleanField()
+    privateGroup = BooleanField(default=False)
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
 class Test(Extended):
-    meta = {"queryset_class": TestQuerySet}
+    meta = {'queryset_class': TestQuerySet}
 
     name = StringField()
 
 
+
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()
