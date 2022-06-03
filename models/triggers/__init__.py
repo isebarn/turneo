@@ -5,10 +5,10 @@ from flask import abort
 
 
 def get_rate_and_bookings(document):
-    rate = get("http://localhost:5000/api/rates/{}".format(str(document.rates.id)))
+    rate = get("http://localhost:5000/api/rates/{}".format(str(document.rateId.id)))
     bookings = get(
-        "http://localhost:5000/api/bookings?rates={}&start={}".format(
-            str(document.rates.id), document.start
+        "http://localhost:5000/api/bookings?rateId={}&start={}".format(
+            str(document.rateId.id), document.start
         )
     )
 

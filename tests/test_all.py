@@ -383,7 +383,7 @@ def test_booking_trigger_private_group_minimum_price():
     booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -423,7 +423,7 @@ def test_booking_trigger_private_group_not_enough_slots():
     booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -460,7 +460,7 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
     booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -500,7 +500,7 @@ def test_booking_trigger_private_group_already_booked():
     successfull_booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -520,7 +520,7 @@ def test_booking_trigger_private_group_already_booked():
     private_booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -561,7 +561,7 @@ def test_booking_trigger_not_enough_slots():
         successfull_booking = post(
             "bookings",
             {
-                "rates": rates["id"],
+                "rateId": rates["id"],
                 "travelerInformation": {
                     "firstName": "John",
                     "lastName": "Doe",
@@ -581,7 +581,7 @@ def test_booking_trigger_not_enough_slots():
     failed_booking = post(
         "bookings",
         {
-            "rates": rates["id"],
+            "rateId": rates["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",

@@ -585,7 +585,7 @@ class RatesQuantity(EmbeddedDocument):
 class Bookings(Extended):
     meta = {'queryset_class': BookingsQuerySet}
 
-    rates = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
+    rateId = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
     start = DateTimeField()
     privateGroup = BooleanField(default=False)
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
