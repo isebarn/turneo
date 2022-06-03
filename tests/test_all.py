@@ -360,3 +360,240 @@ def test_experience_id_rates():
     assert assert_count(
         "experiences/{}/rates?maxParticipants__gte=2".format(exp_2["id"]), 3
     )
+
+
+def test_booking_trigger_private_group_minimum_price():
+    clean()
+
+    rates = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
+            "privateGroup": {
+                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
+            },
+            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
+            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
+        },
+    )
+
+    booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert "message" in booking
+    assert "Minimum price" in booking["message"]
+
+
+def test_booking_trigger_private_group_not_enough_slots():
+    clean()
+
+    rates = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
+            "privateGroup": {
+                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
+            },
+            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
+            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
+        },
+    )
+    booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 12}],
+        },
+    )
+
+    assert "message" in booking
+    assert "This time does not have enough slots" in booking["message"]
+
+
+def test_booking_trigger_private_group_no_private_groups_allowed():
+    clean()
+
+    rates = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
+            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
+            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
+        },
+    )
+    booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 4}],
+        },
+    )
+
+    assert "message" in booking
+    assert "This time does not allow private groups" in booking["message"]
+
+
+def test_booking_trigger_private_group_already_booked():
+    clean()
+
+    rates = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
+            "privateGroup": {
+                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
+            },
+            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
+            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
+        },
+    )
+    successfull_booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 1}],
+        },
+    )
+
+    assert "id" in successfull_booking
+
+    private_booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 4}],
+        },
+    )
+
+    assert "Private booking for this time not available" in private_booking["message"]
+
+
+def test_booking_trigger_not_enough_slots():
+    clean()
+
+    rates = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
+            "privateGroup": {
+                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
+            },
+            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
+            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
+        },
+    )
+
+    for x in range(0, 5):
+        successfull_booking = post(
+            "bookings",
+            {
+                "rates": rates["id"],
+                "travelerInformation": {
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "email": "john.doe@gmail.com",
+                },
+                "notes": {
+                    "fromSeller": "This is an imaginary person",
+                    "fromTraveller": "I am an imaginary person",
+                },
+                "start": "2022-03-14T11:00:00Z",
+                "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+            },
+        )
+
+        assert "id" in successfull_booking
+
+    failed_booking = post(
+        "bookings",
+        {
+            "rates": rates["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": "2022-03-14T11:00:00Z",
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert "Not enough slots available for booking" in failed_booking["message"]
