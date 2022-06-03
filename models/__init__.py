@@ -270,10 +270,7 @@ class Extended(Document):
         return {
             **cls.base(),
             **{
-                field: Nested(
-                    api.models.get(instance.document_type_obj._meta["collection"]),
-                    skip_none=True,
-                )
+                field: String(attribute=lambda x: x["id"])
                 for field, instance in cls._fields.items()
                 if isinstance(instance, ReferenceField)
             },
