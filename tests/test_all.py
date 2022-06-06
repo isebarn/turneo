@@ -1,5 +1,7 @@
 import pytest
 import requests
+from datetime import datetime
+from datetime import timedelta
 
 url = "http://127.0.0.1:5000/api/{}"
 
@@ -25,6 +27,28 @@ def get(endpoint):
 def post(endpoint, data):
     response = requests.post(url.format(endpoint), json=data)
     return response.json()
+
+
+print
+
+
+def post_experience(data):
+    exp = post("experiences", data)
+    post(
+        "rates",
+        {
+            "experienceId": exp["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 30}},
+            ],
+            "dateRange": {
+                "fromDate": (datetime.now() + timedelta(days=1)).isoformat(),
+                "untilDate": (datetime.now() + timedelta(days=3)).isoformat(),
+            },
+        },
+    )
+
+    return exp
 
 
 def patch(endpoint, data):
@@ -55,10 +79,10 @@ def return_one(query):
 def test_experience():
     clean()
 
-    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 10})
+    exp_1 = post_experience({"name": "exp_1", "cutOffTime": 10})
     assert assert_count("experiences", 1)
 
-    exp_2 = post("experiences", {"name": "exp_2", "cutOffTime": 20})
+    exp_2 = post_experience({"name": "exp_2", "cutOffTime": 20})
     assert assert_count("experiences", 2)
     assert assert_count("experiences?name=exp_2", 1)
     assert assert_count("experiences?cutOffTime__gt=15", 1)
@@ -69,8 +93,7 @@ def test_experience():
     assert assert_count("experiences?cutOffTime__lt=20", 1)
     assert assert_count("experiences?cutOffTime__lte=20", 2)
 
-    exp_3 = post(
-        "experiences",
+    exp_3 = post_experience(
         {
             "name": "exp_3",
             "cutOffTime": 20,
@@ -87,8 +110,7 @@ def test_experience():
     assert "name" in return_one("experiences?organizer__exists")["organizer"]
     assert "organizerType" in return_one("experiences?organizer__exists")["organizer"]
 
-    exp_4 = post(
-        "experiences",
+    exp_4 = post_experience(
         {
             "name": "exp_4",
             "cutOffTime": 20,
@@ -96,6 +118,9 @@ def test_experience():
         },
     )
     assert assert_count("experiences?", 4)
+    from pprint import pprint
+
+    pprint(get("experiences"))
     assert assert_count("experiences?$limit=2", 2)
     assert assert_count("experiences?$skip=1", 3)
     assert assert_count("experiences?organizer__exists", 2)
@@ -109,8 +134,7 @@ def test_experience():
         "organizerType" in return_one("experiences?organizer__name=Jack")["organizer"]
     )
 
-    exp_5 = post(
-        "experiences",
+    exp_5 = post_experience(
         {
             "name": "exp_5",
             "cutOffTime": 20,
@@ -148,17 +172,17 @@ def test_experience():
 def test_experience_default_sort():
     clean()
 
-    exp_1 = post(
-        "experiences", {"name": "exp_1", "rating": {"score": 4.5, "reviewsCount": 1200}}
+    exp_1 = post_experience(
+        {"name": "exp_1", "rating": {"score": 4.5, "reviewsCount": 1200}}
     )
-    exp_2 = post(
-        "experiences", {"name": "exp_2", "rating": {"score": 4.2, "reviewsCount": 100}}
+    exp_2 = post_experience(
+        {"name": "exp_2", "rating": {"score": 4.2, "reviewsCount": 100}}
     )
-    exp_3 = post(
-        "experiences", {"name": "exp_3", "rating": {"score": 4.8, "reviewsCount": 1000}}
+    exp_3 = post_experience(
+        {"name": "exp_3", "rating": {"score": 4.8, "reviewsCount": 1000}}
     )
-    exp_4 = post(
-        "experiences", {"name": "exp_4", "rating": {"score": 3.8, "reviewsCount": 32}}
+    exp_4 = post_experience(
+        {"name": "exp_4", "rating": {"score": 3.8, "reviewsCount": 32}}
     )
     assert assert_count("experiences", 4)
 
@@ -167,16 +191,16 @@ def test_experience_default_sort():
     assert get("experiences?$sort=rating__score")[2]["id"] == exp_1["id"]
     assert get("experiences?$sort=rating__score")[3]["id"] == exp_3["id"]
 
-    exp_5 = post(
-        "experiences", {"name": "exp_5", "rating": {"score": 4.2, "reviewsCount": 101}}
+    exp_5 = post_experience(
+        {"name": "exp_5", "rating": {"score": 4.2, "reviewsCount": 101}}
     )
 
-    exp_6 = post(
-        "experiences", {"name": "exp_6", "rating": {"score": 4.5, "reviewsCount": 50}}
+    exp_6 = post_experience(
+        {"name": "exp_6", "rating": {"score": 4.5, "reviewsCount": 50}}
     )
 
-    exp_7 = post(
-        "experiences", {"name": "exp_7", "rating": {"score": 4.5, "reviewsCount": 5000}}
+    exp_7 = post_experience(
+        {"name": "exp_7", "rating": {"score": 4.5, "reviewsCount": 5000}}
     )
 
     sort = "experiences?$sort=-rating__score,-rating__reviewsCount"
@@ -205,8 +229,8 @@ def test_experience_default_sort():
 def test_experience_default_values():
     clean()
 
-    exp_1 = post("experiences", {"name": "exp_1"})
-    exp_2 = post("experiences", {"name": "exp_2", "status": "active"})
+    exp_1 = post_experience({"name": "exp_1"})
+    exp_2 = post_experience({"name": "exp_2", "status": "active"})
     assert assert_count("experiences", 2)
 
     assert get("experiences/{}".format(exp_1["id"]))["status"] == "draft"
@@ -314,12 +338,11 @@ def test_experience_minimum_rate():
 def test_experience_minimum_rate():
     clean()
 
-    exp_1 = post("experiences", {"name": "exp_1"})
-    exp_2 = post(
-        "experiences", {"name": "exp_2", "meetingPoint": {"location": [20.0, 0.12]}}
+    exp_1 = post_experience({"name": "exp_1"})
+    exp_2 = post_experience(
+        {"name": "exp_2", "meetingPoint": {"location": [20.0, 0.12]}}
     )
-    exp_3 = post(
-        "experiences",
+    exp_3 = post_experience(
         {
             "name": "exp_3",
             "meetingPoint": {"location": {"type": "Point", "coordinates": [50, 0.5]}},
@@ -597,3 +620,86 @@ def test_booking_trigger_not_enough_slots():
     )
 
     assert "Not enough slots available for booking" in failed_booking["message"]
+
+
+def test_experience_rate_range():
+    clean()
+
+    exp_1 = post("experiences", {"name": "exp_1"})
+    exp_2 = post("experiences", {"name": "exp_2"})
+    exp_3 = post("experiences", {"name": "exp_3"})
+
+    # exp_1 will have two rates. One for the first half of january and another for the second half
+    rate_1_exp_1 = post(
+        "rates",
+        {
+            "experienceId": exp_1["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 50}},
+                {"retailPrice": {"amount": 40}},
+                {"retailPrice": {"amount": 30}},
+            ],
+            "dateRange": {"fromDate": "2022-01-01", "untilDate": "2022-01-15"},
+        },
+    )
+    rate_2_exp_1 = post(
+        "rates",
+        {
+            "experienceId": exp_1["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 100}},
+                {"retailPrice": {"amount": 10}},
+                {"retailPrice": {"amount": 30}},
+            ],
+            "dateRange": {"fromDate": "2022-01-15", "untilDate": "2022-01-31"},
+        },
+    )
+
+    assert assert_count("experiences", 1)
+    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 1)
+    assert (
+        len(
+            get("experiences?fromDate=2022-01-01&untilDate=2022-01-12")[0][
+                "rateCalendar"
+            ]
+        )
+        == 1
+    )
+    assert (
+        len(
+            get("experiences?fromDate=2022-01-01&untilDate=2022-01-15")[0][
+                "rateCalendar"
+            ]
+        )
+        == 2
+    )
+
+    # exp_2 will have two rates. One for january and another for the first two weeks in february
+    rate_1_exp_2 = post(
+        "rates",
+        {
+            "experienceId": exp_2["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 50}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 30}},
+            ],
+            "dateRange": {"fromDate": "2022-01-01", "untilDate": "2022-02-01"},
+        },
+    )
+    rate_2_exp_2 = post(
+        "rates",
+        {
+            "experienceId": exp_2["id"],
+            "rateTypesPrices": [
+                {"retailPrice": {"amount": 100}},
+                {"retailPrice": {"amount": 20}},
+                {"retailPrice": {"amount": 30}},
+            ],
+            "dateRange": {"fromDate": "2022-02-01", "untilDate": "2022-02-15"},
+        },
+    )
+
+    assert assert_count("experiences", 2)
+    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 2)
+    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-16", 2)

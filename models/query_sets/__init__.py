@@ -1,6 +1,8 @@
 from mongoengine import QuerySet
 import requests
 from bson.objectid import ObjectId
+from datetime import datetime
+from datetime import timedelta
 
 
 class RatesQuerySet(QuerySet):
@@ -22,21 +24,50 @@ class RatesQuerySet(QuerySet):
 
 class ExperiencesQuerySet(QuerySet):
     def default(self, cls, filters):
+        # These can be passed to include rates
+        fromDate = filters.pop("fromDate", None)
+        untilDate = filters.pop("untilDate", None)
+        limit = filters.pop("$limit", None)
+        skip = filters.pop("$skip", None)
+
         experiences = cls.fetch(filters)
+        from pprint import pprint
 
         for experience in experiences:
-            rates = requests.get(
-                "http://localhost:5000/api/rates?$queryset=minimum&experienceId={}".format(
-                    experience["id"]
+            minimumRate = requests.get(
+                "http://localhost:5000/api/rates?$queryset=minimum&experienceId={}&dateRange__fromDate__lte={}".format(
+                    experience["id"], (datetime.now() + timedelta(days=60)).isoformat()
                 )
             )
 
-            rates = rates.json()
+            minimumRate = minimumRate.json()
 
-            if any(rates):
-                experience["minimumRate"] = (
-                    rates[0].get("rateTypesPrices", [{}])[0].get("retailPrice", {})
+            if any(minimumRate):
+                experience["minPrice"] = (
+                    minimumRate[0]
+                    .get("rateTypesPrices", [{}])[0]
+                    .get("retailPrice", {})
                 )
+
+            if fromDate and untilDate:
+                rates = requests.get(
+                    "http://localhost:5000/api/rates?experienceId={}&dateRange__fromDate__gte={}&dateRange__fromDate__lte={}".format(
+                        experience["id"], fromDate, untilDate
+                    )
+                )
+                experience.update({"rateCalendar": rates.json()})
+
+        experiences = list(filter(lambda x: "minPrice" in x, experiences))
+        if fromDate and untilDate:
+            experiences = list(
+                filter(lambda x: any(x.get("rateCalendar", [])), experiences)
+            )
+
+        if skip:
+            experiences = experiences[int(skip) :]
+
+        if limit:
+            experiences = experiences[: int(limit)]
 
         return experiences
 

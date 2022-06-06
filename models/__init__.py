@@ -54,7 +54,9 @@ class DateTimeField(_DateTimeField):
     class ISOFormat(DateTime):
         def format(self, value):
             try:
-                if isinstance(value, datetime):
+                if isinstance(value, str):
+                    return value
+                elif isinstance(value, datetime):
                     return value.isoformat()
                 return value.get("$date")
             except ValueError as ve:
