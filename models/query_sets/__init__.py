@@ -8,7 +8,7 @@ class RatesQuerySet(QuerySet):
         return list(
             cls.objects().aggregate(
                 [
-                    {"$match": {"experienceId": ObjectId(filters.get("experiences"))}},
+                    {"$match": {"experienceId": ObjectId(filters.get("experienceId"))}},
                     {"$unwind": "$rateTypesPrices"},
                     {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
                     {"$limit": 1},
