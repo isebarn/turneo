@@ -168,7 +168,9 @@ experiences_full = api.clone(
     {"minPrice": Nested(retailPrice_full), "rateCalendar": List(Nested(rates_full))},
 )
 
-rates_full = api.clone("rates", rates_full, {"dates": List(Nested(dates_full))})
+rates_full = api.clone(
+    "rates", rates_full, {"dates": List(Nested(dates_full)), "status": String}
+)
 api.models.get("rates").pop("startTimes")
 api.models.get("rates").pop("dateRange")
 

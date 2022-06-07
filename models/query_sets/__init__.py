@@ -51,6 +51,17 @@ class RatesQuerySet(QuerySet):
 
                 item["privateGroupStatus"] = False
 
+
+        for experienceId in list(
+            set(map(lambda x: x.get("experienceId", {}).get("id"), rates))
+        ):
+            experienceStatus = get("experiences/{}".format(experienceId)).get("status")
+            [
+                rate.update({"status": experienceStatus})
+                for rate in rates
+                if rate.get("experienceId", {}).get("id") == experienceId
+            ]
+
         return rates
 
     def minimum(self, cls, filters):
