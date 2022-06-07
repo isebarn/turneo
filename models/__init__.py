@@ -38,7 +38,6 @@ from flask_restx.fields import Raw
 from models.query_sets import ExperiencesQuerySet
 from models.query_sets import RatesQuerySet
 from models.query_sets import BookingsQuerySet
-
 ## EXTRA
 
 
@@ -48,14 +47,14 @@ class PointField(_PointField):
             return value
 
     marshal = ReturnObject
-
+    
 
 class DateTimeField(_DateTimeField):
     class ISOFormat(DateTime):
         def format(self, value):
             try:
                 if isinstance(value, str):
-                    return value
+                    return value            
                 elif isinstance(value, datetime):
                     return value.isoformat()
                 return value.get("$date")
@@ -245,6 +244,7 @@ class Extended(Document):
             .limit(int(kwargs.get("$limit", 0)))
         )
 
+
     @classmethod
     def base(cls):
         return {
@@ -321,7 +321,7 @@ class Extended(Document):
             return cls.objects.default(cls, filters)
 
         else:
-            return cls.fetch(filters)
+            return cls.fetch(filters)      
 
     @classmethod
     def fetch(cls, filters):
@@ -500,9 +500,9 @@ class Excluded(EmbeddedDocument):
 
 
 class Experiences(Extended):
-    meta = {"queryset_class": ExperiencesQuerySet}
+    meta = {'queryset_class': ExperiencesQuerySet}
 
-    sort_by = "-rating__score"
+    sort_by = '-rating__score'
     name = StringField()
     code = StringField()
     status = StringField(default="draft")
@@ -554,9 +554,14 @@ class StartTimes(EmbeddedDocument):
     timeSlot = StringField()
     daysOfTheWeek = ListField(StringField())
 
+class Dates(EmbeddedDocument):
+    availableQuantity = IntField()
+    privateGroupStatus = BooleanField(default=False)
+    time = DateTimeField()
+
 
 class Rates(Extended):
-    meta = {"queryset_class": RatesQuerySet}
+    meta = {'queryset_class': RatesQuerySet}
 
     experienceId = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
@@ -583,38 +588,36 @@ class RatesQuantity(EmbeddedDocument):
 
 
 class Bookings(Extended):
-    meta = {"queryset_class": BookingsQuerySet}
+    meta = {'queryset_class': BookingsQuerySet}
 
     rateId = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
     start = DateTimeField()
     privateGroup = BooleanField(default=False)
+    bookingStatus = StringField(default="pending")
+    organiserConfirmationCode = StringField()
+    bookingLastModified = DateTimeField()
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
 
 
-class Dates(EmbeddedDocument):
-    availableQuantity = IntField()
-    privateGroupStatus = BooleanField()
-    time = DateTimeField()
-
 
 # def config():
-# signals.pre_save.connect(Class.pre_save, sender=Class)
-# signals.post_save.connect(Class.post_save, sender=Class)
+    # signals.pre_save.connect(Class.pre_save, sender=Class)
+    # signals.post_save.connect(Class.post_save, sender=Class)
 
-# seed
-# logging.info("Seeding database")
-# seed = load(open("models/seed.json"))
+    # seed
+    # logging.info("Seeding database")
+    # seed = load(open("models/seed.json"))
 
-# helper method to remove "_id" and "_cls" so I can compare json objects
-# from the db
-# def remove_meta_from_dict_item(item):
-#     item.pop("_cls")
-#     item.pop("_id")
-#     for key, value in item.items():
-#         if isinstance(value, dict):
-#             remove_meta_from_dict_item(value)
+    # helper method to remove "_id" and "_cls" so I can compare json objects
+    # from the db
+    # def remove_meta_from_dict_item(item):
+    #     item.pop("_cls")
+    #     item.pop("_id")
+    #     for key, value in item.items():
+    #         if isinstance(value, dict):
+    #             remove_meta_from_dict_item(value)
 
 
 # config()
