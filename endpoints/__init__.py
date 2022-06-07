@@ -161,11 +161,16 @@ ratesQuantity_full = api.model("ratesQuantity", models.RatesQuantity.model(api))
 bookings_base = api.model("bookings_base", models.Bookings.base())
 bookings_reference = api.model("bookings_reference", models.Bookings.reference())
 bookings_full = api.model("bookings", models.Bookings.model(api))
+dates_full = api.model("dates", models.Dates.model(api))
 experiences_full = api.clone(
     "experiences",
     experiences_full,
     {"minPrice": Nested(retailPrice_full), "rateCalendar": List(Nested(rates_full))},
 )
+
+rates_full = api.clone("rates", rates_full, {"dates": List(Nested(dates_full))})
+api.models.get("rates").pop("startTimes")
+api.models.get("rates").pop("dateRange")
 
 
 @api.route("/experiences")

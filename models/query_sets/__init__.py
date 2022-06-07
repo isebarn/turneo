@@ -3,9 +3,56 @@ import requests
 from bson.objectid import ObjectId
 from datetime import datetime
 from datetime import timedelta
+from dateutil.parser import isoparse
+
+
+def get(query):
+    result = requests.get("http://localhost:5000/api/{}".format(query))
+    return result.json()
 
 
 class RatesQuerySet(QuerySet):
+    def default(self, cls, filters):
+        rates = cls.fetch(filters)
+
+        bookings = []
+        for rate in rates:
+            rate["dates"] = []
+            fromDate = isoparse(rate["dateRange"]["fromDate"]["$date"])
+            untilDate = isoparse(rate["dateRange"]["untilDate"]["$date"])
+            for date in range((untilDate - fromDate).days + 1):
+                for startTime in rate["startTimes"]:
+                    rate["dates"].append(
+                        {
+                            "time": fromDate
+                            + timedelta(
+                                days=date,
+                                hours=int(startTime["timeSlot"].split(":")[0]),
+                                minutes=int(startTime["timeSlot"].split(":")[1]),
+                            ),
+                            "availableQuantity": rate["maxParticipants"],
+                            "privateGroupStatus": "privateGroup" in rate,
+                        }
+                    )
+
+            bookings = get("bookings?rateId={}".format(rate["id"]))
+
+            for booking in bookings:
+                item = next(
+                    filter(
+                        lambda x: x["time"] == isoparse(booking["start"]),
+                        rate["dates"],
+                    )
+                )
+
+                item["availableQuantity"] -= sum(
+                    map(lambda x: x["quantity"], booking["ratesQuantity"])
+                )
+
+                item["privateGroupStatus"] = False
+
+        return rates
+
     def minimum(self, cls, filters):
         return list(
             cls.objects().aggregate(
@@ -21,6 +68,9 @@ class RatesQuerySet(QuerySet):
     def query_by_experience(self, cls, query):
         return requests.get("http://localhost:5000/api/rates?{}".format(query)).json()
 
+    def fetch(self, cls, filters):
+        return cls.fetch(filters)
+
 
 class ExperiencesQuerySet(QuerySet):
     def default(self, cls, filters):
@@ -31,7 +81,6 @@ class ExperiencesQuerySet(QuerySet):
         skip = filters.pop("$skip", None)
 
         experiences = cls.fetch(filters)
-        from pprint import pprint
 
         for experience in experiences:
             minimumRate = requests.get(
@@ -51,7 +100,7 @@ class ExperiencesQuerySet(QuerySet):
 
             if fromDate and untilDate:
                 rates = requests.get(
-                    "http://localhost:5000/api/rates?experienceId={}&dateRange__fromDate__gte={}&dateRange__fromDate__lte={}".format(
+                    "http://localhost:5000/api/rates?$queryset=fetch&experienceId={}&dateRange__fromDate__gte={}&dateRange__fromDate__lte={}".format(
                         experience["id"], fromDate, untilDate
                     )
                 )

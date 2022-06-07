@@ -29,9 +29,6 @@ def post(endpoint, data):
     return response.json()
 
 
-print
-
-
 def post_experience(data):
     exp = post("experiences", data)
     post(
@@ -118,9 +115,6 @@ def test_experience():
         },
     )
     assert assert_count("experiences?", 4)
-    from pprint import pprint
-
-    pprint(get("experiences"))
     assert assert_count("experiences?$limit=2", 2)
     assert assert_count("experiences?$skip=1", 3)
     assert assert_count("experiences?organizer__exists", 2)
@@ -703,3 +697,70 @@ def test_experience_rate_range():
     assert assert_count("experiences", 2)
     assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 2)
     assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-16", 2)
+
+
+def test_rate_booking():
+    clean()
+
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+    rate_1 = post(
+        "rates",
+        {
+            "maxParticipants": 10,
+            "dateRange": {
+                "fromDate": (today + timedelta(days=2)).isoformat(),
+                "untilDate": (today + timedelta(days=4)).isoformat(),
+            },
+            "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
+        },
+    )
+
+    post(
+        "bookings",
+        {
+            "rateId": rate_1["id"],
+            "start": (today + timedelta(days=2, hours=11)).isoformat(),
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    post(
+        "bookings",
+        {
+            "rateId": rate_1["id"],
+            "start": (today + timedelta(days=2, hours=11)).isoformat(),
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 3}],
+        },
+    )
+
+    post(
+        "bookings",
+        {
+            "rateId": rate_1["id"],
+            "start": (today + timedelta(days=3, hours=11)).isoformat(),
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    rate_2 = post(
+        "rates",
+        {
+            "maxParticipants": 8,
+            "dateRange": {
+                "fromDate": (today + timedelta(days=2)).isoformat(),
+                "untilDate": (today + timedelta(days=4)).isoformat(),
+            },
+            "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
+        },
+    )
+
+    post(
+        "bookings",
+        {
+            "rateId": rate_2["id"],
+            "start": (today + timedelta(days=2, hours=11)).isoformat(),
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 3}],
+        },
+    )

@@ -316,11 +316,11 @@ class Extended(Document):
 
     @classmethod
     def qry(cls, filters):
-        if hasattr(cls._meta["queryset_class"], "default"):
-            return cls.objects.default(cls, filters)
-
         if "$queryset" in filters:
             return getattr(cls.objects, filters.pop("$queryset"))(cls, filters)
+
+        elif hasattr(cls._meta["queryset_class"], "default"):
+            return cls.objects.default(cls, filters)
 
         else:
             return cls.fetch(filters)
@@ -593,6 +593,12 @@ class Bookings(Extended):
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
     ratesQuantity = EmbeddedDocumentListField(RatesQuantity)
+
+
+class Dates(EmbeddedDocument):
+    availableQuantity = IntField()
+    privateGroupStatus = BooleanField()
+    time = DateTimeField()
 
 
 # def config():
