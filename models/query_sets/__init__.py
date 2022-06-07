@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from datetime import timedelta
 from dateutil.parser import isoparse
+from datetime import timezone
 
 
 def get(query):
@@ -17,6 +18,7 @@ class RatesQuerySet(QuerySet):
 
         bookings = []
         for rate in rates:
+            rate["experienceId"] = rate["experienceId"]["id"]
             rate["dates"] = []
             fromDate = isoparse(rate["dateRange"]["fromDate"]["$date"])
             untilDate = isoparse(rate["dateRange"]["untilDate"]["$date"])
@@ -51,15 +53,12 @@ class RatesQuerySet(QuerySet):
 
                 item["privateGroupStatus"] = False
 
-
-        for experienceId in list(
-            set(map(lambda x: x.get("experienceId", {}).get("id"), rates))
-        ):
+        for experienceId in list(set(map(lambda x: x.get("experienceId"), rates))):
             experienceStatus = get("experiences/{}".format(experienceId)).get("status")
             [
                 rate.update({"status": experienceStatus})
                 for rate in rates
-                if rate.get("experienceId", {}).get("id") == experienceId
+                if rate.get("experienceId") == experienceId
             ]
 
         return rates
@@ -131,10 +130,66 @@ class ExperiencesQuerySet(QuerySet):
 
         return experiences
 
+    def fetch(self, cls, filters):
+        return cls.fetch(filters)
+
 
 class BookingsQuerySet(QuerySet):
-    pass
+    def default(self, cls, filters):
+        bookings = cls.fetch(filters)
 
+        rates = cls.rateId.document_type_obj.fetch(
+            {"id__in": list(set([x["rateId"]["id"] for x in bookings]))}
+        )
 
-class TestQuerySet(QuerySet):
-    pass
+        experiences = cls.rateId.document_type_obj.experienceId.document_type_obj.fetch(
+            {"id__in": list(set([x["experienceId"]["id"] for x in rates]))}
+        )
+
+        for booking in bookings:
+            rate = next(filter(lambda x: x["id"] == booking["rateId"]["id"], rates))
+            experience = next(
+                filter(lambda x: x["id"] == rate["experienceId"]["id"], experiences)
+            )
+
+            booking["ratesBooked"] = {
+                "rateId": booking["rateId"]["id"],
+                "start": booking["start"],
+                "ratesQuantity": booking["ratesQuantity"],
+            }
+
+            booking["experience"] = experience
+
+            from pprint import pprint
+
+            booking["price"] = {
+                "finalRetailPrice": {"amount": 0, "currency": "EUR"},
+                "retailPriceBreakdown": [],
+            }
+
+            for item in booking["ratesQuantity"]:
+                price = next(
+                    filter(
+                        lambda x: item["rateType"] == x["rateType"],
+                        rate["rateTypesPrices"],
+                    )
+                )
+                booking["price"]["retailPriceBreakdown"].append(
+                    {**price, "quantity": item["quantity"]}
+                )
+                booking["price"]["finalRetailPrice"]["amount"] += (
+                    price.get("retailPrice", {}).get("amount")
+                ) * item["quantity"]
+
+            booking["cancellationFee"] = {
+                "amount": booking["price"]["finalRetailPrice"]["amount"]
+                if (
+                    isoparse(booking["start"]["$date"]) - datetime.now(timezone.utc)
+                ).days
+                else 0,
+                "currency": booking["price"]["finalRetailPrice"]["currency"],
+            }
+
+            booking["bookingCreated"] = ObjectId(booking["id"]).generation_time
+
+        return bookings

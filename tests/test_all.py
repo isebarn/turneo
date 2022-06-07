@@ -700,20 +700,26 @@ def test_experience_rate_range():
 
 
 def test_rate_booking():
-    clean()
+    # clean()
 
     today = datetime(
         datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
     )
+
+    exp_1 = post("experiences", {"name": "Fun"})
     rate_1 = post(
         "rates",
         {
+            "experienceId": exp_1["id"],
             "maxParticipants": 10,
             "dateRange": {
                 "fromDate": (today + timedelta(days=2)).isoformat(),
                 "untilDate": (today + timedelta(days=4)).isoformat(),
             },
             "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
         },
     )
 
@@ -744,15 +750,20 @@ def test_rate_booking():
         },
     )
 
+    exp_2 = post("experiences", {"name": "Hard"})
     rate_2 = post(
         "rates",
         {
+            "experienceId": exp_2["id"],
             "maxParticipants": 8,
             "dateRange": {
                 "fromDate": (today + timedelta(days=2)).isoformat(),
                 "untilDate": (today + timedelta(days=4)).isoformat(),
             },
             "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+            ],
         },
     )
 

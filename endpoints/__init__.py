@@ -162,6 +162,8 @@ bookings_base = api.model("bookings_base", models.Bookings.base())
 bookings_reference = api.model("bookings_reference", models.Bookings.reference())
 bookings_full = api.model("bookings", models.Bookings.model(api))
 dates_full = api.model("dates", models.Dates.model(api))
+
+experiences_basic = api.clone("experiences_basic", experiences_full)
 experiences_full = api.clone(
     "experiences",
     experiences_full,
@@ -173,6 +175,32 @@ rates_full = api.clone(
 )
 api.models.get("rates").pop("startTimes")
 api.models.get("rates").pop("dateRange")
+
+price_breakdown = api.clone(
+    "booking_price_breakdown",
+    rateTypesPrices_full,
+    {
+        "quantity": Integer,
+    },
+)
+price = api.model(
+    "booking_price",
+    {
+        "finalRetailPrice": Nested(api.models.get("retailPrice")),
+        "retailPriceBreakdown": List(Nested(api.models.get("booking_price_breakdown"))),
+    },
+)
+bookings_full = api.clone(
+    "bookings",
+    bookings_full,
+    {
+        "experience": Nested(api.models.get("experiences_basic"), skip_none=True),
+        "price": Nested(api.models.get("booking_price")),
+        "ratesBooked": Nested(api.models.get("bookings")),
+        "cancellationFee": Nested(api.models.get("retailPrice")),
+        "bookingCreated": DateTime,
+    },
+)
 
 
 @api.route("/experiences")

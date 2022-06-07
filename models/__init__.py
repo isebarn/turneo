@@ -272,9 +272,7 @@ class Extended(Document):
         return {
             **cls.base(),
             **{
-                field: String(
-                    attribute=lambda x: x.get("id", x.get("{}Id".format(field)))
-                )
+                field: Raw()
                 for field, instance in cls._fields.items()
                 if isinstance(instance, ReferenceField)
             },
