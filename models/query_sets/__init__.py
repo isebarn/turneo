@@ -16,51 +16,6 @@ class RatesQuerySet(QuerySet):
     def default(self, cls, filters):
         rates = cls.fetch(filters)
 
-        bookings = []
-        for rate in rates:
-            rate["experienceId"] = rate["experienceId"]["id"]
-            rate["dates"] = []
-            fromDate = isoparse(rate["dateRange"]["fromDate"]["$date"])
-            untilDate = isoparse(rate["dateRange"]["untilDate"]["$date"])
-            for date in range((untilDate - fromDate).days + 1):
-                for startTime in rate["startTimes"]:
-                    rate["dates"].append(
-                        {
-                            "time": fromDate
-                            + timedelta(
-                                days=date,
-                                hours=int(startTime["timeSlot"].split(":")[0]),
-                                minutes=int(startTime["timeSlot"].split(":")[1]),
-                            ),
-                            "availableQuantity": rate["maxParticipants"],
-                            "privateGroupStatus": "privateGroup" in rate,
-                        }
-                    )
-
-            bookings = get("bookings?rateId={}".format(rate["id"]))
-
-            for booking in bookings:
-                item = next(
-                    filter(
-                        lambda x: x["time"] == isoparse(booking["start"]),
-                        rate["dates"],
-                    )
-                )
-
-                item["availableQuantity"] -= sum(
-                    map(lambda x: x["quantity"], booking["ratesQuantity"])
-                )
-
-                item["privateGroupStatus"] = False
-
-        for experienceId in list(set(map(lambda x: x.get("experienceId"), rates))):
-            experienceStatus = get("experiences/{}".format(experienceId)).get("status")
-            [
-                rate.update({"status": experienceStatus})
-                for rate in rates
-                if rate.get("experienceId") == experienceId
-            ]
-
         return rates
 
     def minimum(self, cls, filters):
@@ -160,8 +115,6 @@ class BookingsQuerySet(QuerySet):
             }
 
             booking["experience"] = experience
-
-            from pprint import pprint
 
             booking["price"] = {
                 "finalRetailPrice": {"amount": 0, "currency": "EUR"},

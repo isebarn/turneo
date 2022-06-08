@@ -29,19 +29,65 @@ def post(endpoint, data):
     return response.json()
 
 
+def post_rate(data={}):
+    exp_1 = post("experiences", {"name": "exp_1"})
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+    baseRate = {
+        "maxParticipants": 10,
+        "privateGroup": {
+            "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
+        },
+        "rateTypesPrices": [
+            {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+        ],
+        "dateRange": {
+            "from": (today + timedelta(days=1)).isoformat(),
+            "until": (today + timedelta(days=6)).isoformat(),
+        },
+        "startTimes": [
+            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]},
+            {
+                "timeSlot": "12:30",
+                "daysOfTheWeek": [
+                    6,
+                ],
+            },
+        ],
+    }
+    return post("experiences/{}/rates".format(exp_1["id"]), {**baseRate, **data})
+
+
 def post_experience(data):
     exp = post("experiences", data)
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+
     post(
-        "rates",
+        "experiences/{}/rates".format(exp["id"]),
         {
-            "experienceId": exp["id"],
+            "maxParticipants": 10,
+            "privateGroup": {
+                "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
+            },
             "rateTypesPrices": [
-                {"retailPrice": {"amount": 30}},
+                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
             ],
             "dateRange": {
-                "fromDate": (datetime.now() + timedelta(days=1)).isoformat(),
-                "untilDate": (datetime.now() + timedelta(days=3)).isoformat(),
+                "from": (today + timedelta(days=2)).isoformat(),
+                "until": (today + timedelta(days=4)).isoformat(),
             },
+            "startTimes": [
+                {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2]},
+                {
+                    "timeSlot": "12:30",
+                    "daysOfTheWeek": [
+                        6,
+                    ],
+                },
+            ],
         },
     )
 
@@ -360,13 +406,24 @@ def test_experience_id_rates():
         datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
     )
     baseRate = {
-        "dateRange": {
-            "fromDate": (today + timedelta(days=2)).isoformat(),
-            "untilDate": (today + timedelta(days=4)).isoformat(),
+        "privateGroup": {
+            "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
         },
-        "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
         "rateTypesPrices": [
             {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+        ],
+        "dateRange": {
+            "from": (today + timedelta(days=2)).isoformat(),
+            "until": (today + timedelta(days=4)).isoformat(),
+        },
+        "startTimes": [
+            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2]},
+            {
+                "timeSlot": "12:30",
+                "daysOfTheWeek": [
+                    6,
+                ],
+            },
         ],
     }
 
@@ -374,19 +431,19 @@ def test_experience_id_rates():
     exp_2 = post("experiences", {"name": "exp_2"})
 
     rate_1_exp_1 = post(
-        "rates", {**baseRate, "experienceId": exp_1["id"], "maxParticipants": 10}
+        "experiences/{}/rates".format(exp_1["id"]), {**baseRate, "maxParticipants": 10}
     )
     rate_2_exp_1 = post(
-        "rates", {**baseRate, "experienceId": exp_1["id"], "maxParticipants": 20}
+        "experiences/{}/rates".format(exp_1["id"]), {**baseRate, "maxParticipants": 20}
     )
     rate_1_exp_2 = post(
-        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 5}
+        "experiences/{}/rates".format(exp_2["id"]), {**baseRate, "maxParticipants": 5}
     )
     rate_2_exp_2 = post(
-        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 2}
+        "experiences/{}/rates".format(exp_2["id"]), {**baseRate, "maxParticipants": 2}
     )
     rate_2_exp_3 = post(
-        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 6}
+        "experiences/{}/rates".format(exp_2["id"]), {**baseRate, "maxParticipants": 6}
     )
 
     assert assert_count("experiences/{}/rates".format(exp_1["id"]), 2)
@@ -403,28 +460,15 @@ def test_experience_id_rates():
     )
 
 
-def test_booking_trigger_private_group_minimum_price():
+def test_booking_trigger():
     clean()
 
-    rates = post(
-        "rates",
-        {
-            "maxParticipants": 10,
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-            "privateGroup": {
-                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
-            },
-            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
-            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
-        },
-    )
+    rate = post_rate()
 
     booking = post(
         "bookings",
         {
-            "rateId": rates["id"],
+            "rateId": rate["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -434,37 +478,25 @@ def test_booking_trigger_private_group_minimum_price():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": "2022-03-14T11:00:00Z",
+            "start": rate["dates"][0]["time"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
-    assert "message" in booking
-    assert "Minimum price" in booking["message"]
+    assert (
+        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+    )
 
 
 def test_booking_trigger_private_group_not_enough_slots():
     clean()
 
-    rates = post(
-        "rates",
-        {
-            "maxParticipants": 10,
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-            "privateGroup": {
-                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
-            },
-            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
-            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
-        },
-    )
+    rate = post_rate()
     booking = post(
         "bookings",
         {
-            "rateId": rates["id"],
+            "rateId": rate["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -474,7 +506,7 @@ def test_booking_trigger_private_group_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": "2022-03-14T11:00:00Z",
+            "start": rate["dates"][0]["time"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 12}],
         },
@@ -487,21 +519,11 @@ def test_booking_trigger_private_group_not_enough_slots():
 def test_booking_trigger_private_group_no_private_groups_allowed():
     clean()
 
-    rates = post(
-        "rates",
-        {
-            "maxParticipants": 10,
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
-            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
-        },
-    )
+    rate = post_rate({"privateGroup": None})
     booking = post(
         "bookings",
         {
-            "rateId": rates["id"],
+            "rateId": rate["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -511,9 +533,9 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": "2022-03-14T11:00:00Z",
+            "start": rate["dates"][0]["time"],
             "privateGroup": True,
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 4}],
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
@@ -524,24 +546,11 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
 def test_booking_trigger_private_group_already_booked():
     clean()
 
-    rates = post(
-        "rates",
-        {
-            "maxParticipants": 10,
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-            "privateGroup": {
-                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
-            },
-            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
-            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
-        },
-    )
-    successfull_booking = post(
+    rate = post_rate()
+    booking = post(
         "bookings",
         {
-            "rateId": rates["id"],
+            "rateId": rate["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -551,58 +560,46 @@ def test_booking_trigger_private_group_already_booked():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": "2022-03-14T11:00:00Z",
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 1}],
-        },
-    )
-
-    assert "id" in successfull_booking
-
-    private_booking = post(
-        "bookings",
-        {
-            "rateId": rates["id"],
-            "travelerInformation": {
-                "firstName": "John",
-                "lastName": "Doe",
-                "email": "john.doe@gmail.com",
-            },
-            "notes": {
-                "fromSeller": "This is an imaginary person",
-                "fromTraveller": "I am an imaginary person",
-            },
-            "start": "2022-03-14T11:00:00Z",
+            "start": rate["dates"][0]["time"],
             "privateGroup": True,
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 4}],
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
-    assert "Private booking for this time not available" in private_booking["message"]
+    assert "id" in booking
+
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert "Private booking for this time not available" in booking["message"]
 
 
 def test_booking_trigger_not_enough_slots():
     clean()
 
-    rates = post(
-        "rates",
-        {
-            "maxParticipants": 10,
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-            "privateGroup": {
-                "minimumGroupRetailPrice": {"amount": 120, "currency": "EUR"}
-            },
-            "dateRange": {"fromDate": "2022-05-15", "untilDate": "2022-11-15"},
-            "startTimes": [{"timeSlot": "11:30", "daysOfTheWeek": ["Monday"]}],
-        },
-    )
+    rate = post_rate()
 
     for x in range(0, 5):
-        successfull_booking = post(
+        booking = post(
             "bookings",
             {
-                "rateId": rates["id"],
+                "rateId": rate["id"],
                 "travelerInformation": {
                     "firstName": "John",
                     "lastName": "Doe",
@@ -612,17 +609,17 @@ def test_booking_trigger_not_enough_slots():
                     "fromSeller": "This is an imaginary person",
                     "fromTraveller": "I am an imaginary person",
                 },
-                "start": "2022-03-14T11:00:00Z",
+                "start": rate["dates"][0]["time"],
                 "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
             },
         )
 
-        assert "id" in successfull_booking
+        assert "id" in booking
 
-    failed_booking = post(
+    booking = post(
         "bookings",
         {
-            "rateId": rates["id"],
+            "rateId": rate["id"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -632,173 +629,9 @@ def test_booking_trigger_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": "2022-03-14T11:00:00Z",
+            "start": rate["dates"][0]["time"],
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
-    assert "Not enough slots available for booking" in failed_booking["message"]
-
-
-def test_experience_rate_range():
-    clean()
-
-    exp_1 = post("experiences", {"name": "exp_1"})
-    exp_2 = post("experiences", {"name": "exp_2"})
-    exp_3 = post("experiences", {"name": "exp_3"})
-
-    # exp_1 will have two rates. One for the first half of january and another for the second half
-    rate_1_exp_1 = post(
-        "rates",
-        {
-            "experienceId": exp_1["id"],
-            "rateTypesPrices": [
-                {"retailPrice": {"amount": 50}},
-                {"retailPrice": {"amount": 40}},
-                {"retailPrice": {"amount": 30}},
-            ],
-            "dateRange": {"fromDate": "2022-01-01", "untilDate": "2022-01-15"},
-        },
-    )
-    rate_2_exp_1 = post(
-        "rates",
-        {
-            "experienceId": exp_1["id"],
-            "rateTypesPrices": [
-                {"retailPrice": {"amount": 100}},
-                {"retailPrice": {"amount": 10}},
-                {"retailPrice": {"amount": 30}},
-            ],
-            "dateRange": {"fromDate": "2022-01-15", "untilDate": "2022-01-31"},
-        },
-    )
-    from pprint import pprint
-
-    pprint(get("experiences"))
-
-    assert assert_count("experiences", 1)
-    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 1)
-    assert (
-        len(
-            get("experiences?fromDate=2022-01-01&untilDate=2022-01-12")[0][
-                "rateCalendar"
-            ]
-        )
-        == 1
-    )
-    assert (
-        len(
-            get("experiences?fromDate=2022-01-01&untilDate=2022-01-15")[0][
-                "rateCalendar"
-            ]
-        )
-        == 2
-    )
-
-    # exp_2 will have two rates. One for january and another for the first two weeks in february
-    rate_1_exp_2 = post(
-        "rates",
-        {
-            "experienceId": exp_2["id"],
-            "rateTypesPrices": [
-                {"retailPrice": {"amount": 50}},
-                {"retailPrice": {"amount": 20}},
-                {"retailPrice": {"amount": 30}},
-            ],
-            "dateRange": {"fromDate": "2022-01-01", "untilDate": "2022-02-01"},
-        },
-    )
-    rate_2_exp_2 = post(
-        "rates",
-        {
-            "experienceId": exp_2["id"],
-            "rateTypesPrices": [
-                {"retailPrice": {"amount": 100}},
-                {"retailPrice": {"amount": 20}},
-                {"retailPrice": {"amount": 30}},
-            ],
-            "dateRange": {"fromDate": "2022-02-01", "untilDate": "2022-02-15"},
-        },
-    )
-
-    assert assert_count("experiences", 2)
-    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 2)
-    assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-16", 2)
-
-
-def test_rate_booking():
-    # clean()
-
-    today = datetime(
-        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
-    )
-
-    exp_1 = post("experiences", {"name": "Fun"})
-    rate_1 = post(
-        "rates",
-        {
-            "experienceId": exp_1["id"],
-            "maxParticipants": 10,
-            "dateRange": {
-                "fromDate": (today + timedelta(days=2)).isoformat(),
-                "untilDate": (today + timedelta(days=4)).isoformat(),
-            },
-            "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-        },
-    )
-
-    post(
-        "bookings",
-        {
-            "rateId": rate_1["id"],
-            "start": (today + timedelta(days=2, hours=11)).isoformat(),
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
-        },
-    )
-
-    post(
-        "bookings",
-        {
-            "rateId": rate_1["id"],
-            "start": (today + timedelta(days=2, hours=11)).isoformat(),
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 3}],
-        },
-    )
-
-    post(
-        "bookings",
-        {
-            "rateId": rate_1["id"],
-            "start": (today + timedelta(days=3, hours=11)).isoformat(),
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
-        },
-    )
-
-    exp_2 = post("experiences", {"name": "Hard"})
-    rate_2 = post(
-        "rates",
-        {
-            "experienceId": exp_2["id"],
-            "maxParticipants": 8,
-            "dateRange": {
-                "fromDate": (today + timedelta(days=2)).isoformat(),
-                "untilDate": (today + timedelta(days=4)).isoformat(),
-            },
-            "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
-            "rateTypesPrices": [
-                {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
-            ],
-        },
-    )
-
-    post(
-        "bookings",
-        {
-            "rateId": rate_2["id"],
-            "start": (today + timedelta(days=2, hours=11)).isoformat(),
-            "ratesQuantity": [{"rateType": "Adult", "quantity": 3}],
-        },
-    )
+    assert "Not enough slots available for booking" in booking["message"]

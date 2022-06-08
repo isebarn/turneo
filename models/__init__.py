@@ -567,9 +567,8 @@ class Rates(Extended):
     experienceId = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
-    dateRange = EmbeddedDocumentField(DateRange)
     rateTypesPrices = EmbeddedDocumentListField(RateTypesPrices)
-    startTimes = EmbeddedDocumentListField(StartTimes)
+    dates = EmbeddedDocumentListField(Dates)
 
 
 class TravelerInformation(EmbeddedDocument):

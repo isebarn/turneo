@@ -1,36 +1,31 @@
 from mongoengine import signals
 from models import Bookings
+from models import Rates
 from requests import get
 from flask import abort
 from datetime import datetime
+from dateutil.parser import isoparse
 from datetime import timezone
 
 
-def get_rate_and_bookings(document):
-    rate = get("http://localhost:5000/api/rates/{}".format(str(document.rateId.id)))
-    bookings = get(
-        "http://localhost:5000/api/bookings/fetch?rateId={}&start={}".format(
-            str(document.rateId.id), document.start
+def private_group(document):
+    rate = Rates.objects.get(id=document.rateId.id)
+    total_slots = rate.get("maxParticipants", 0)
+
+    item = next(
+        filter(
+            lambda x: x.time.isoformat() == document.start.replace("Z", ""),
+            rate.dates,
         )
     )
 
-    return rate.json(), bookings.json()
-
-
-def private_group(document):
-    rate, bookings = get_rate_and_bookings(document)
-    total_slots = rate.get("maxParticipants", 0)
-    total_bookings = sum(
-        [x.get("quantity", 0) for y in bookings for x in y.get("ratesQuantity", [])]
-    )
-
-    if total_bookings != 0:
+    if not item.privateGroupStatus:
         raise abort(400, "Private booking for this time not available")
 
-    elif sum([x.quantity for x in document.ratesQuantity]) > total_slots:
+    elif sum([x.quantity for x in document.ratesQuantity]) > rate.maxParticipants:
         raise abort(400, "This time does not have enough slots")
 
-    elif not rate.get("privateGroup"):
+    elif not rate.privateGroup:
         raise abort(400, "This time does not allow private groups")
 
     else:
@@ -39,30 +34,26 @@ def private_group(document):
             [
                 next(
                     filter(
-                        lambda prices: prices.get("rateType") == rateQuantity.rateType,
-                        rate.get("rateTypesPrices", {}),
+                        lambda prices: prices.rateType == rateQuantity.rateType,
+                        rate.rateTypesPrices,
                     )
-                )
-                .get("retailPrice", {})
-                .get("amount", 0)
+                ).retailPrice.amount
                 * rateQuantity.quantity
                 for rateQuantity in document.ratesQuantity
             ]
         )
 
-        minimum_private_group_price = (
-            rate.get("privateGroup", {})
-            .get("minimumGroupRetailPrice", {})
-            .get("amount", 0)
-        )
-
-        if total_price < minimum_private_group_price:
+        if total_price < rate.privateGroup.minimumGroupRetailPrice.amount:
             abort(
                 400,
                 "Minimum price for private group is {}".format(
-                    minimum_private_group_price
+                    rate.privateGroup.minimumGroupRetailPrice.amount
                 ),
             )
+
+        item.availableQuantity -= sum([x.quantity for x in document.ratesQuantity])
+        item.privateGroupStatus = False
+        rate.save()
 
 
 def available_bookings_check(sender, document):
@@ -70,16 +61,21 @@ def available_bookings_check(sender, document):
         private_group(document)
 
     else:
-        rate, bookings = get_rate_and_bookings(document)
-        total_slots = rate.get("maxParticipants", 0)
-        total_bookings = sum(
-            [x.get("quantity", 0) for y in bookings for x in y.get("ratesQuantity", [])]
+        rate = Rates.objects.get(id=document.rateId.id)
+        item = next(
+            filter(
+                lambda x: x.time.isoformat() == document.start.replace("Z", ""),
+                rate.dates,
+            )
         )
 
-        if (total_slots - total_bookings) < sum(
-            [x.quantity for x in document.ratesQuantity]
-        ):
+        item.availableQuantity -= sum([x.quantity for x in document.ratesQuantity])
+        item.privateGroupStatus = False
+
+        if item.availableQuantity < 0:
             raise abort(400, "Not enough slots available for booking")
+
+        rate.save()
 
 
 def update_booking(sender, document):
