@@ -105,3 +105,5 @@ class ExperienceImageController(Resource):
         )
 
         experience.save()
+
+        return experience.to_json()
