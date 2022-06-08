@@ -41,6 +41,7 @@ class File(Resource):
 
     @api.expect(image_upload_parser)
     def post(self, filename):
+        filename = "/".join(filename.split("__"))
         image = Image.open(BytesIO(request.files.get("file").read()))
 
         in_mem_file = BytesIO()
@@ -48,7 +49,7 @@ class File(Resource):
         in_mem_file.seek(0)
         file = in_mem_file
         file.content_type = request.files.get("file").content_type
-        upload_file(file, "{}/original".format(filename))
+        upload_file(file, "{}".format(filename))
 
         in_mem_file = BytesIO()
         image.thumbnail((200, 200))
@@ -56,7 +57,7 @@ class File(Resource):
         in_mem_file.seek(0)
         file = in_mem_file
         file.content_type = request.files.get("file").content_type
-        upload_file(file, "{}/thumbnail".format(filename))
+        upload_file(file, "{}_thumbnail".format(filename))
 
     def delete(self, filename):
         return delete_object(filename)

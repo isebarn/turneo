@@ -5,9 +5,11 @@ from datetime import timezone
 from endpoints import api
 from endpoints import Resource
 from models import Rates
+from models import Images
 from models import Experiences
 from flask import request
 from requests import post
+from requests import get
 
 
 @api.route("/experiences/<experience_id>/rates")
@@ -70,3 +72,36 @@ class ExperienceFetchController(Resource):
 
     def get(self):
         return Experiences.fetch(request.args)
+
+
+@api.route("/experiences/<experience_id>/images")
+class ExperienceImageController(Resource):
+    api.model("experiences_fetch", Experiences.model(api))
+
+    def post(self, experience_id):
+        experience = Experiences.objects.get(id=experience_id)
+        file = request.files.get("file")
+        post(
+            "http://localhost:5000/aws_s3/images/image/{}__{}".format(
+                str(experience.id), len(experience.images) + 1
+            ),
+            files={"file": file},
+        )
+
+        image = "https://turneo.s3.amazonaws.com/{}/{}"
+
+        experience.images.append(
+            Images(
+                **{
+                    "urlHigh": image.format(
+                        str(experience.id), len(experience.images) + 1, ""
+                    ),
+                    "urlLow": image.format(
+                        str(experience.id),
+                        str(len(experience.images) + 1) + "_thumbnail",
+                    ),
+                }
+            )
+        )
+
+        experience.save()
