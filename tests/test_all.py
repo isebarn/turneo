@@ -2,6 +2,7 @@ import pytest
 import requests
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 
 url = "http://127.0.0.1:5000/api/{}"
 
@@ -30,7 +31,7 @@ def post(endpoint, data):
 
 
 def post_rate(data={}):
-    exp_1 = post("experiences", {"name": "exp_1"})
+    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 24})
     today = datetime(
         datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
     )
@@ -513,7 +514,7 @@ def test_booking_trigger_private_group_not_enough_slots():
     )
 
     assert "message" in booking
-    assert "This time does not have enough slots" in booking["message"]
+    assert "Not enough slots available for booking" in booking["message"]
 
 
 def test_booking_trigger_private_group_no_private_groups_allowed():
@@ -540,7 +541,7 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
     )
 
     assert "message" in booking
-    assert "This time does not allow private groups" in booking["message"]
+    assert "This rate does not allow private groups" in booking["message"]
 
 
 def test_booking_trigger_private_group_already_booked():
@@ -587,7 +588,7 @@ def test_booking_trigger_private_group_already_booked():
         },
     )
 
-    assert "Private booking for this time not available" in booking["message"]
+    assert "Private booking for this timeslot not available" in booking["message"]
 
 
 def test_booking_trigger_not_enough_slots():
@@ -635,3 +636,42 @@ def test_booking_trigger_not_enough_slots():
     )
 
     assert "Not enough slots available for booking" in booking["message"]
+
+
+def test_booking_within_24_hours_of_cutoffTime():
+    clean()
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+
+    rate = post_rate(
+        {
+            "dateRange": {
+                "from": (today + timedelta(days=1)).isoformat(),
+                "until": (today + timedelta(days=6)).isoformat(),
+            },
+            "startTimes": [
+                {"timeSlot": "01:00", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]}
+            ],
+        }
+    )
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john.doe@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert "Cannot book this experience with less than" in booking.get("message")

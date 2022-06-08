@@ -1,4 +1,5 @@
 from mongoengine import signals
+from models import Experiences
 from models import Bookings
 from models import Rates
 from requests import get
@@ -8,25 +9,13 @@ from dateutil.parser import isoparse
 from datetime import timezone
 
 
-def private_group(document):
-    rate = Rates.objects.get(id=document.rateId.id)
-    total_slots = rate.get("maxParticipants", 0)
-
-    item = next(
-        filter(
-            lambda x: x.time.isoformat() == document.start.replace("Z", ""),
-            rate.dates,
-        )
-    )
+def private_group(rate, item, document):
 
     if not item.privateGroupStatus:
-        raise abort(400, "Private booking for this time not available")
-
-    elif sum([x.quantity for x in document.ratesQuantity]) > rate.maxParticipants:
-        raise abort(400, "This time does not have enough slots")
+        raise abort(400, "Private booking for this timeslot not available")
 
     elif not rate.privateGroup:
-        raise abort(400, "This time does not allow private groups")
+        raise abort(400, "This rate does not allow private groups")
 
     else:
         total = 0
@@ -51,31 +40,38 @@ def private_group(document):
                 ),
             )
 
-        item.availableQuantity -= sum([x.quantity for x in document.ratesQuantity])
-        item.privateGroupStatus = False
-        rate.save()
-
 
 def available_bookings_check(sender, document):
-    if document.privateGroup:
-        private_group(document)
+    rate = Rates.objects.get(id=document.rateId.id)
+    experience = Experiences.objects.get(id=rate.experienceId.id)
 
-    else:
-        rate = Rates.objects.get(id=document.rateId.id)
-        item = next(
-            filter(
-                lambda x: x.time.isoformat() == document.start.replace("Z", ""),
-                rate.dates,
-            )
+    if (
+        (isoparse(document.start) - datetime.now(timezone.utc)).seconds / 3600
+    ) < experience.cutOffTime:
+        abort(
+            400,
+            "Cannot book this experience with less than {} hour notice".format(
+                experience.cutOffTime
+            ),
         )
 
-        item.availableQuantity -= sum([x.quantity for x in document.ratesQuantity])
-        item.privateGroupStatus = False
+    item = next(
+        filter(
+            lambda x: x.time.isoformat() == document.start.replace("Z", ""),
+            rate.dates,
+        )
+    )
 
-        if item.availableQuantity < 0:
-            raise abort(400, "Not enough slots available for booking")
+    if document.privateGroup:
+        private_group(rate, item, document)
 
-        rate.save()
+    item.availableQuantity -= sum([x.quantity for x in document.ratesQuantity])
+    item.privateGroupStatus = False
+
+    if item.availableQuantity < 0:
+        raise abort(400, "Not enough slots available for booking")
+
+    rate.save()
 
 
 def update_booking(sender, document):
