@@ -52,6 +52,18 @@ class ExperiencesController(Resource):
         return response.json()
 
 
+@api.route("/experiences/<experience_id>/rates/<rate_id>")
+class ExperienceRateController(Resource):
+    @api.marshal_list_with(api.models.get("rates"), skip_none=True)
+    def get(self, experience_id, rate_id):
+        query = "experienceId={}&id={}".format(experience_id, rate_id)
+        query += request.url.split("?")[1] if len(request.url.split("?")) > 1 else ""
+        result = Rates.objects.query_by_experience(Rates, query)
+        if result:
+            return result[0]
+        return {}
+
+
 @api.route("/experiences/fetch")
 class ExperienceFetchController(Resource):
     api.model("experiences_fetch", Experiences.model(api))

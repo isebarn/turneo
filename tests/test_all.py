@@ -747,3 +747,64 @@ def test_email():
     )
 
     assert "id" in booking
+
+
+def test_experienceId_rateId_query():
+    clean()
+
+    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 24})
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+    baseRate = {
+        "maxParticipants": 10,
+        "privateGroup": {
+            "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
+        },
+        "rateTypesPrices": [
+            {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+        ],
+        "dateRange": {
+            "from": (today + timedelta(days=5)).isoformat(),
+            "until": (today + timedelta(days=7)).isoformat(),
+        },
+        "startTimes": [
+            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]},
+        ],
+    }
+    post("experiences/{}/rates".format(exp_1["id"]), baseRate)
+    post(
+        "experiences/{}/rates".format(exp_1["id"]),
+        {
+            **baseRate,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 20, "currency": "EUR"}}
+            ],
+            "dateRange": {
+                "from": (today + timedelta(days=5)).isoformat(),
+                "until": (today + timedelta(days=7)).isoformat(),
+            },
+        },
+    )
+    test_rate = post(
+        "experiences/{}/rates".format(exp_1["id"]),
+        {
+            **baseRate,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 10, "currency": "EUR"}}
+            ],
+            "dateRange": {
+                "from": (today + timedelta(days=65)).isoformat(),
+                "until": (today + timedelta(days=70)).isoformat(),
+            },
+        },
+    )
+
+    assert assert_count("rates", 3)
+
+    assert (
+        get("experiences/{}/rates/{}".format(exp_1["id"], test_rate["id"]))[
+            "rateTypesPrices"
+        ][0]["retailPrice"]["amount"]
+        == 10
+    )
