@@ -64,7 +64,7 @@ class RatesQuerySet(QuerySet):
         return rates
 
     def minimum(self, cls, filters):
-        return list(
+        result = next(
             cls.objects().aggregate(
                 [
                     {"$match": {"experienceId": ObjectId(filters.get("experienceId"))}},
@@ -72,8 +72,11 @@ class RatesQuerySet(QuerySet):
                     {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
                     {"$limit": 1},
                 ]
-            )
+            ),
+            None,
         )
+
+        return result
 
     def query_by_experience(self, cls, query):
         return requests.get("http://localhost:5000/api/rates?{}".format(query)).json()
@@ -101,12 +104,10 @@ class ExperiencesQuerySet(QuerySet):
 
             minimumRate = minimumRate.json()
 
-            if any(minimumRate):
-                experience["minPrice"] = (
-                    minimumRate[0]
-                    .get("rateTypesPrices", [{}])[0]
-                    .get("retailPrice", {})
-                )
+            if minimumRate:
+                experience["minPrice"] = minimumRate.get("rateTypesPrices", [{}])[
+                    0
+                ].get("retailPrice", {})
 
             if fromDate and untilDate:
                 rates = requests.get(

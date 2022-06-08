@@ -2,12 +2,14 @@ from mongoengine import signals
 from models import Bookings
 from requests import get
 from flask import abort
+from datetime import datetime
+from datetime import timezone
 
 
 def get_rate_and_bookings(document):
     rate = get("http://localhost:5000/api/rates/{}".format(str(document.rateId.id)))
     bookings = get(
-        "http://localhost:5000/api/bookings?rateId={}&start={}".format(
+        "http://localhost:5000/api/bookings/fetch?rateId={}&start={}".format(
             str(document.rateId.id), document.start
         )
     )
@@ -80,4 +82,9 @@ def available_bookings_check(sender, document):
             raise abort(400, "Not enough slots available for booking")
 
 
+def update_booking(sender, document):
+    document.bookingLastModified = datetime.now(timezone.utc)
+
+
 signals.pre_save.connect(available_bookings_check, sender=Bookings)
+signals.pre_save.connect(update_booking, sender=Bookings)

@@ -7,7 +7,7 @@ url = "http://127.0.0.1:5000/api/{}"
 
 
 def delete(table):
-    response = requests.get(url.format("{}".format(table)))
+    response = requests.get(url.format("{}/fetch".format(table)))
     items = response.json()
 
     for item in items:
@@ -80,6 +80,7 @@ def test_experience():
     assert assert_count("experiences", 1)
 
     exp_2 = post_experience({"name": "exp_2", "cutOffTime": 20})
+
     assert assert_count("experiences", 2)
     assert assert_count("experiences?name=exp_2", 1)
     assert assert_count("experiences?cutOffTime__gt=15", 1)
@@ -355,15 +356,38 @@ def test_experience_minimum_rate():
 
 def test_experience_id_rates():
     clean()
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+    baseRate = {
+        "dateRange": {
+            "fromDate": (today + timedelta(days=2)).isoformat(),
+            "untilDate": (today + timedelta(days=4)).isoformat(),
+        },
+        "startTimes": [{"timeSlot": "11:00"}, {"timeSlot": "13:00"}],
+        "rateTypesPrices": [
+            {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+        ],
+    }
 
     exp_1 = post("experiences", {"name": "exp_1"})
     exp_2 = post("experiences", {"name": "exp_2"})
 
-    rate_1_exp_1 = post("rates", {"experienceId": exp_1["id"], "maxParticipants": 10})
-    rate_2_exp_1 = post("rates", {"experienceId": exp_1["id"], "maxParticipants": 20})
-    rate_1_exp_2 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 5})
-    rate_2_exp_2 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 2})
-    rate_2_exp_3 = post("rates", {"experienceId": exp_2["id"], "maxParticipants": 6})
+    rate_1_exp_1 = post(
+        "rates", {**baseRate, "experienceId": exp_1["id"], "maxParticipants": 10}
+    )
+    rate_2_exp_1 = post(
+        "rates", {**baseRate, "experienceId": exp_1["id"], "maxParticipants": 20}
+    )
+    rate_1_exp_2 = post(
+        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 5}
+    )
+    rate_2_exp_2 = post(
+        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 2}
+    )
+    rate_2_exp_3 = post(
+        "rates", {**baseRate, "experienceId": exp_2["id"], "maxParticipants": 6}
+    )
 
     assert assert_count("experiences/{}/rates".format(exp_1["id"]), 2)
     assert assert_count("experiences/{}/rates".format(exp_2["id"]), 3)
@@ -648,6 +672,9 @@ def test_experience_rate_range():
             "dateRange": {"fromDate": "2022-01-15", "untilDate": "2022-01-31"},
         },
     )
+    from pprint import pprint
+
+    pprint(get("experiences"))
 
     assert assert_count("experiences", 1)
     assert assert_count("experiences?fromDate=2022-01-01&untilDate=2022-01-12", 1)
