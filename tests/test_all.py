@@ -473,7 +473,6 @@ def test_booking_trigger():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -501,7 +500,6 @@ def test_booking_trigger_private_group_not_enough_slots():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -528,7 +526,6 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -555,7 +552,6 @@ def test_booking_trigger_private_group_already_booked():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -576,7 +572,6 @@ def test_booking_trigger_private_group_already_booked():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -604,7 +599,6 @@ def test_booking_trigger_not_enough_slots():
                 "travelerInformation": {
                     "firstName": "John",
                     "lastName": "Doe",
-                    "email": "john.doe@gmail.com",
                 },
                 "notes": {
                     "fromSeller": "This is an imaginary person",
@@ -624,7 +618,6 @@ def test_booking_trigger_not_enough_slots():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -662,7 +655,6 @@ def test_booking_within_24_hours_of_cutoffTime():
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
-                "email": "john.doe@gmail.com",
             },
             "notes": {
                 "fromSeller": "This is an imaginary person",
@@ -729,3 +721,29 @@ def test_min_rate_within_timerange():
     )
 
     assert return_one("experiences")["minPrice"]["amount"] == 20
+
+
+def test_email():
+    clean()
+
+    rate = post_rate()
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+                # "email": "isebarn182@gmail.com",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert "id" in booking

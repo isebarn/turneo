@@ -3,10 +3,12 @@ from models import Experiences
 from models import Bookings
 from models import Rates
 from requests import get
+from requests import post
 from flask import abort
 from datetime import datetime
 from dateutil.parser import isoparse
 from datetime import timezone
+from extensions.aws_ses.methods import send_email
 
 
 def private_group(rate, item, document):
@@ -79,5 +81,17 @@ def update_booking(sender, document):
     document.bookingLastModified = datetime.now(timezone.utc)
 
 
+def email_notification(sender, document, created):
+    if document.travelerInformation.email:
+        send_email(
+            **{
+                "receivers": [document.travelerInformation.email],
+                "body": "Booking request made",
+                "subject": "Booking request made",
+            },
+        )
+
+
 signals.pre_save.connect(available_bookings_check, sender=Bookings)
 signals.pre_save.connect(update_booking, sender=Bookings)
+signals.post_save.connect(email_notification, sender=Bookings)
