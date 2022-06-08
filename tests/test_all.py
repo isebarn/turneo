@@ -44,7 +44,7 @@ def post_rate(data={}):
             {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
         ],
         "dateRange": {
-            "from": (today + timedelta(days=1)).isoformat(),
+            "from": (today + timedelta(days=3)).isoformat(),
             "until": (today + timedelta(days=6)).isoformat(),
         },
         "startTimes": [
@@ -675,3 +675,57 @@ def test_booking_within_24_hours_of_cutoffTime():
     )
 
     assert "Cannot book this experience with less than" in booking.get("message")
+
+
+def test_min_rate_within_timerange():
+    clean()
+
+    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 24})
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+    baseRate = {
+        "maxParticipants": 10,
+        "privateGroup": {
+            "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
+        },
+        "rateTypesPrices": [
+            {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+        ],
+        "dateRange": {
+            "from": (today + timedelta(days=5)).isoformat(),
+            "until": (today + timedelta(days=7)).isoformat(),
+        },
+        "startTimes": [
+            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]},
+        ],
+    }
+    post("experiences/{}/rates".format(exp_1["id"]), baseRate)
+    post(
+        "experiences/{}/rates".format(exp_1["id"]),
+        {
+            **baseRate,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 20, "currency": "EUR"}}
+            ],
+            "dateRange": {
+                "from": (today + timedelta(days=5)).isoformat(),
+                "until": (today + timedelta(days=7)).isoformat(),
+            },
+        },
+    )
+    post(
+        "experiences/{}/rates".format(exp_1["id"]),
+        {
+            **baseRate,
+            "rateTypesPrices": [
+                {"rateType": "Adult", "retailPrice": {"amount": 10, "currency": "EUR"}}
+            ],
+            "dateRange": {
+                "from": (today + timedelta(days=65)).isoformat(),
+                "until": (today + timedelta(days=70)).isoformat(),
+            },
+        },
+    )
+
+    assert return_one("experiences")["minPrice"]["amount"] == 20

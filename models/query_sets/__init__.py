@@ -22,7 +22,18 @@ class RatesQuerySet(QuerySet):
         result = next(
             cls.objects().aggregate(
                 [
-                    {"$match": {"experienceId": ObjectId(filters.get("experienceId"))}},
+                    {
+                        "$match": {
+                            "experienceId": ObjectId(filters.get("experienceId")),
+                            "dates": {
+                                "$elemMatch": {
+                                    "time": {
+                                        "$lte": datetime.now() + timedelta(days=60)
+                                    }
+                                }
+                            },
+                        }
+                    },
                     {"$unwind": "$rateTypesPrices"},
                     {"$sort": {"rateTypesPrices.retailPrice.amount": 1}},
                     {"$limit": 1},

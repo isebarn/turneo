@@ -45,9 +45,10 @@ def available_bookings_check(sender, document):
     rate = Rates.objects.get(id=document.rateId.id)
     experience = Experiences.objects.get(id=rate.experienceId.id)
 
-    if (
-        (isoparse(document.start) - datetime.now(timezone.utc)).seconds / 3600
-    ) < experience.cutOffTime:
+    diff = isoparse(document.start) - datetime.now(timezone.utc)
+    hours = diff.days * 24 + diff.seconds / 3600
+
+    if hours < experience.cutOffTime:
         abort(
             400,
             "Cannot book this experience with less than {} hour notice".format(
