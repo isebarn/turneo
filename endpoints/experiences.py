@@ -65,6 +65,10 @@ class ExperienceRateController(Resource):
             return result[0]
         return {}
 
+    def delete(self, experience_id, rate_id):
+        Rates.objects.get(id=rate_id).delete()
+        return {"message": "Rate {} deleted".format(rate_id)}
+
 
 @api.route("/experiences/fetch")
 class ExperienceFetchController(Resource):

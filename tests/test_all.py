@@ -808,3 +808,48 @@ def test_experienceId_rateId_query():
         ][0]["retailPrice"]["amount"]
         == 10
     )
+
+
+def test_delete_rate():
+    clean()
+    rate = post_rate()
+
+    result = requests.delete(
+        "http://localhost:5000/api/experiences/{}/rates/{}".format(
+            rate["experienceId"], rate["id"]
+        )
+    )
+
+    assert "Rate {} deleted".format(rate["id"]) in result.json()["message"]
+
+
+def test_delete_rate_fail():
+    clean()
+
+    rate = post_rate()
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    result = requests.delete(
+        "http://localhost:5000/api/experiences/{}/rates/{}".format(
+            rate["experienceId"], rate["id"]
+        )
+    )
+
+    assert result.status_code == 400
+    assert "Could not delete document" in result.json()["message"]

@@ -20,6 +20,7 @@ from mongoengine import EmbeddedDocumentListField
 from mongoengine import DictField
 from mongoengine import signals
 from mongoengine import NULLIFY
+from mongoengine import DENY
 from mongoengine import DateTimeField as _DateTimeField
 from mongoengine import FloatField as _FloatField
 from mongoengine import IntField as _IntField
@@ -564,7 +565,7 @@ class Dates(EmbeddedDocument):
 class Rates(Extended):
     meta = {"queryset_class": RatesQuerySet}
 
-    experienceId = ReferenceField(Experiences, reverse_delete_rule=NULLIFY)
+    experienceId = ReferenceField(Experiences, reverse_delete_rule=DENY)
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
     rateTypesPrices = EmbeddedDocumentListField(RateTypesPrices)
@@ -590,7 +591,7 @@ class RatesQuantity(EmbeddedDocument):
 class Bookings(Extended):
     meta = {"queryset_class": BookingsQuerySet}
 
-    rateId = ReferenceField(Rates, reverse_delete_rule=NULLIFY)
+    rateId = ReferenceField(Rates, reverse_delete_rule=DENY)
     start = DateTimeField()
     privateGroup = BooleanField(default=False)
     bookingStatus = StringField(default="pending")

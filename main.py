@@ -9,6 +9,7 @@ from flask_restx import Api
 from mongoengine import DoesNotExist
 from mongoengine import InvalidQueryError
 from mongoengine import FieldDoesNotExist
+from mongoengine import OperationError
 from bson.objectid import ObjectId
 
 # Local application imports
@@ -44,6 +45,7 @@ def handle_no_result_exception(error):
 
 @api.errorhandler(InvalidQueryError)
 @api.errorhandler(FieldDoesNotExist)
+@api.errorhandler(OperationError)
 def invalid_query_error(error):
     return {"message": str(error)}, 400
 
