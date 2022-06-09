@@ -80,30 +80,31 @@ class ExperienceImageController(Resource):
 
     def post(self, experience_id):
         experience = Experiences.objects.get(id=experience_id)
-        file = request.files.get("file")
-        post(
-            "http://localhost:5000/aws_s3/images/image/{}__{}".format(
-                str(experience.id), len(experience.images) + 1
-            ),
-            files={"file": file},
-        )
+        files = request.files.getlist("file")
 
-        image = "https://turneo.s3.amazonaws.com/{}/{}"
-
-        experience.images.append(
-            Images(
-                **{
-                    "urlHigh": image.format(
-                        str(experience.id), len(experience.images) + 1, ""
-                    ),
-                    "urlLow": image.format(
-                        str(experience.id),
-                        str(len(experience.images) + 1) + "_thumbnail",
-                    ),
-                }
+        for file in files:
+            post(
+                "http://localhost:5000/aws_s3/images/image/{}__{}".format(
+                    str(experience.id), len(experience.images) + 1
+                ),
+                files={"file": file},
             )
-        )
+
+            image = "https://turneo.s3.amazonaws.com/{}/{}"
+
+            experience.images.append(
+                Images(
+                    **{
+                        "urlHigh": image.format(
+                            str(experience.id), len(experience.images) + 1, ""
+                        ),
+                        "urlLow": image.format(
+                            str(experience.id),
+                            str(len(experience.images) + 1) + "_thumbnail",
+                        ),
+                    }
+                )
+            )
 
         experience.save()
-
         return experience.to_json()
