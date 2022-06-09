@@ -16,7 +16,7 @@ def delete(table):
 
 
 def clean():
-    for item in ["experiences", "rates", "bookings"]:
+    for item in ["bookings", "rates", "experiences"]:
         delete(item)
 
 
