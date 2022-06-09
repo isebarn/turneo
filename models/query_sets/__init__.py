@@ -7,6 +7,21 @@ from dateutil.parser import isoparse
 from datetime import timezone
 
 
+# This file contains querysets
+# What are querysets
+# When querying the models, you do
+# ModelName.objects({
+#   field_1: value_1
+#   .
+#   .
+#   field_n: value_2
+# })
+# A queryset is shorthand for this. You define a method called fx custom_query_1
+# And now you can execute ModelName.objects.custom_query_1
+# The api supports directly calling a queryset by calling
+# GET /api/ModelName?$queryset=custom_query_1
+
+
 def get(query):
     result = requests.get("http://localhost:5000/api/{}".format(query))
     return result.json()

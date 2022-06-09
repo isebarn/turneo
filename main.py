@@ -7,9 +7,6 @@ from flask import request
 from flask_cors import CORS
 from flask_restx import Api
 from mongoengine import DoesNotExist
-from mongoengine import InvalidQueryError
-from mongoengine import FieldDoesNotExist
-from mongoengine import OperationError
 from bson.objectid import ObjectId
 
 # Local application imports
@@ -28,8 +25,7 @@ api = Api(app)
 api.add_namespace(_api)
 
 for extension in api_list:
-    api.add_namespace(extension)
-
+	api.add_namespace(extension)
 
 @api.errorhandler(DoesNotExist)
 def handle_no_result_exception(error):
@@ -41,13 +37,6 @@ def handle_no_result_exception(error):
         }, 404
 
     return {"message": str(error)}, 404
-
-
-@api.errorhandler(InvalidQueryError)
-@api.errorhandler(FieldDoesNotExist)
-@api.errorhandler(OperationError)
-def invalid_query_error(error):
-    return {"message": str(error)}, 400
 
 
 @api.errorhandler
