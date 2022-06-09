@@ -1,16 +1,19 @@
 from datetime import datetime
 from datetime import timedelta
-from dateutil.parser import isoparse
 from datetime import timezone
-from endpoints import api
-from endpoints import Resource
-from models import Rates
-from models import Images
-from models import Experiences
-from flask import request
+from requests import get
 from requests import post
 from requests import put
-from requests import get
+from dateutil.parser import isoparse
+
+from flask import abort
+from flask import request
+
+from models import Experiences
+from models import Images
+from models import Rates
+from endpoints import api
+from endpoints import Resource
 
 
 @api.route("/experiences/<experience_id>/rates")
@@ -76,6 +79,35 @@ class ExperienceRateController(Resource):
     def delete(self, experience_id, rate_id):
         Rates.objects.get(id=rate_id).delete()
         return {"message": "Rate {} deleted".format(rate_id)}
+
+
+@api.route("/experiences/<experience_id>/rates/<rate_id>/availability")
+class ExperienceRateAvailabilityController(Resource):
+    @api.marshal_with(api.models.get("rates"), skip_none=True)
+    @api.expect(api.models.get("dates"))
+    def patch(self, experience_id, rate_id):
+        rate = Rates.objects.get(id=rate_id)
+        data = request.get_json()
+
+        item = next(
+            filter(
+                lambda x: x.time == isoparse(data.get("time").replace("Z", "")),
+                rate.dates,
+            ),
+            None,
+        )
+
+        if not item:
+            abort("Rate with this time does not exist")
+
+        item.availableQuantity = data.get("availableQuantity", item.availableQuantity)
+        item.privateGroupStatus = data.get(
+            "privateGroupStatus", item.privateGroupStatus
+        )
+
+        rate.save()
+
+        return rate.to_json()
 
 
 @api.route("/experiences/fetch")

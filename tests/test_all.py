@@ -859,7 +859,6 @@ def test_put_rate():
     clean()
 
     rate = post_rate()
-    from pprint import pprint
 
     for item in rate["dates"]:
         item["availableQuantity"] -= 1
@@ -877,3 +876,22 @@ def test_put_rate():
         assert (org["availableQuantity"] - 1) == new["availableQuantity"]
 
     assert rate["maxParticipants"] - 1 == rate_updated["maxParticipants"]
+
+
+def test_patch_rate():
+    clean()
+
+    rate = post_rate()
+
+    rate["dates"][3]["availableQuantity"] -= 2
+    rate_updated = patch(
+        "experiences/{}/rates/{}/availability".format(rate["experienceId"], rate["id"]),
+        rate["dates"][3],
+    )
+
+    rate = post_rate()
+
+    assert (
+        rate["dates"][3]["availableQuantity"] - 2
+        == rate_updated["dates"][3]["availableQuantity"]
+    )
