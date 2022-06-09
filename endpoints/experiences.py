@@ -9,6 +9,7 @@ from models import Images
 from models import Experiences
 from flask import request
 from requests import post
+from requests import put
 from requests import get
 
 
@@ -56,7 +57,7 @@ class ExperiencesController(Resource):
 
 @api.route("/experiences/<experience_id>/rates/<rate_id>")
 class ExperienceRateController(Resource):
-    @api.marshal_list_with(api.models.get("rates"), skip_none=True)
+    @api.marshal_with(api.models.get("rates"), skip_none=True)
     def get(self, experience_id, rate_id):
         query = "experienceId={}&id={}".format(experience_id, rate_id)
         query += request.url.split("?")[1] if len(request.url.split("?")) > 1 else ""
@@ -64,6 +65,13 @@ class ExperienceRateController(Resource):
         if result:
             return result[0]
         return {}
+
+    @api.marshal_with(api.models.get("rates"), skip_none=True)
+    def put(self, experience_id, rate_id):
+        return put(
+            "http://localhost:5000/api/rates/{}".format(rate_id),
+            json={**request.get_json(), "experienceId": experience_id},
+        ).json()
 
     def delete(self, experience_id, rate_id):
         Rates.objects.get(id=rate_id).delete()

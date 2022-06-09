@@ -853,3 +853,27 @@ def test_delete_rate_fail():
 
     assert result.status_code == 400
     assert "Could not delete document" in result.json()["message"]
+
+
+def test_put_rate():
+    clean()
+
+    rate = post_rate()
+    from pprint import pprint
+
+    for item in rate["dates"]:
+        item["availableQuantity"] -= 1
+
+    rate["maxParticipants"] -= 1
+
+    rate_updated = put(
+        "experiences/{}/rates/{}".format(rate["experienceId"], rate["id"]),
+        rate,
+    )
+
+    rate = post_rate()
+
+    for org, new in zip(rate["dates"], rate_updated["dates"]):
+        assert (org["availableQuantity"] - 1) == new["availableQuantity"]
+
+    assert rate["maxParticipants"] - 1 == rate_updated["maxParticipants"]
