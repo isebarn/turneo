@@ -98,7 +98,6 @@ class ExperiencesQuerySet(QuerySet):
                 )
                 experience.update({"rateCalendar": rates.json()})
 
-        experiences = list(filter(lambda x: "minPrice" in x, experiences))
         if fromDate and untilDate:
             experiences = list(
                 filter(lambda x: any(x.get("rateCalendar", [])), experiences)
