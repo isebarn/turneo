@@ -119,22 +119,23 @@ class BookingsQuerySet(QuerySet):
     def default(self, cls, filters):
         bookings = cls.fetch(filters)
 
+
         rates = cls.rateId.document_type_obj.fetch(
-            {"id__in": list(set([x["rateId"]["id"] for x in bookings]))}
+            {"id__in": list(set([x["rateId"] for x in bookings]))}
         )
 
         experiences = cls.rateId.document_type_obj.experienceId.document_type_obj.fetch(
-            {"id__in": list(set([x["experienceId"]["id"] for x in rates]))}
+            {"id__in": list(set([x["experienceId"] for x in rates]))}
         )
 
         for booking in bookings:
-            rate = next(filter(lambda x: x["id"] == booking["rateId"]["id"], rates))
+            rate = next(filter(lambda x: x["id"] == booking["rateId"], rates))
             experience = next(
-                filter(lambda x: x["id"] == rate["experienceId"]["id"], experiences)
+                filter(lambda x: x["id"] == rate["experienceId"], experiences)
             )
 
             booking["ratesBooked"] = {
-                "rateId": booking["rateId"]["id"],
+                "rateId": booking["rateId"],
                 "start": booking["start"],
                 "ratesQuantity": booking["ratesQuantity"],
             }
