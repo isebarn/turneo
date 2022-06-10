@@ -20,9 +20,14 @@ from endpoints import Resource
 class ExperiencesController(Resource):
     @api.marshal_list_with(api.models.get("rates"), skip_none=True)
     def get(self, experience_id):
-        query = "experienceId__id={}&".format(experience_id)
-        query += request.url.split("?")[1] if len(request.url.split("?")) > 1 else ""
-        return Rates.objects.query_by_experience(Rates, query)
+        if "from" not in request.args or "until" not in request.args:
+            abort(400, "from or until missing from query")
+
+        request.args["experienceId__id"] = experience_id
+        request.args["dates__time__gte"] = request.args.pop("from")
+        request.args["dates__time__lte"] = request.args.pop("until")
+
+        return Rates.fetch(request.args)
 
     def post(self, experience_id):
         rate = request.get_json()

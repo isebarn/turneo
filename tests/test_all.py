@@ -428,6 +428,9 @@ def test_experience_id_rates():
         ],
     }
 
+    fromDate = today + timedelta(days=3)
+    untilDate = today + timedelta(days=5)
+
     exp_1 = post("experiences", {"name": "exp_1"})
     exp_2 = post("experiences", {"name": "exp_2"})
 
@@ -447,17 +450,41 @@ def test_experience_id_rates():
         "experiences/{}/rates".format(exp_2["id"]), {**baseRate, "maxParticipants": 6}
     )
 
-    assert assert_count("experiences/{}/rates".format(exp_1["id"]), 2)
-    assert assert_count("experiences/{}/rates".format(exp_2["id"]), 3)
-    assert assert_count("experiences/{}/rates?maxParticipants=2".format(exp_2["id"]), 1)
     assert assert_count(
-        "experiences/{}/rates?maxParticipants__gt=2".format(exp_2["id"]), 2
+        "experiences/{}/rates?from={}&until={}".format(
+            exp_1["id"], fromDate, untilDate
+        ),
+        2,
     )
     assert assert_count(
-        "experiences/{}/rates?maxParticipants__lt=2".format(exp_2["id"]), 0
+        "experiences/{}/rates?from={}&until={}".format(
+            exp_2["id"], fromDate, untilDate
+        ),
+        3,
     )
     assert assert_count(
-        "experiences/{}/rates?maxParticipants__gte=2".format(exp_2["id"]), 3
+        "experiences/{}/rates?from={}&until={}&maxParticipants=2".format(
+            exp_2["id"], fromDate, untilDate
+        ),
+        1,
+    )
+    assert assert_count(
+        "experiences/{}/rates?from={}&until={}&maxParticipants__gt=2".format(
+            exp_2["id"], fromDate, untilDate
+        ),
+        2,
+    )
+    assert assert_count(
+        "experiences/{}/rates?from={}&until={}&maxParticipants__lt=2".format(
+            exp_2["id"], fromDate, untilDate
+        ),
+        0,
+    )
+    assert assert_count(
+        "experiences/{}/rates?from={}&until={}&maxParticipants__gte=2".format(
+            exp_2["id"], fromDate, untilDate
+        ),
+        3,
     )
 
 
