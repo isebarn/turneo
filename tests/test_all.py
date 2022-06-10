@@ -142,45 +142,41 @@ def test_experience():
         {
             "name": "exp_3",
             "cutOffTime": 20,
-            "organizer": {"name": "Jack", "organizerType": "Cars"},
+            "partner": {"name": "Jack", "partnerType": "Cars"},
         },
     )
     assert assert_count("experiences?", 3)
-    assert assert_count("experiences?organizer__exists", 1)
-    assert assert_count("experiences?organizer__name=Jack", 1)
-    assert assert_count(
-        "experiences?organizer__name=Jack&organizer__organizerType=Cars", 1
-    )
-    assert "organizer" in return_one("experiences?organizer__exists")
-    assert "name" in return_one("experiences?organizer__exists")["organizer"]
-    assert "organizerType" in return_one("experiences?organizer__exists")["organizer"]
+    assert assert_count("experiences?partner__exists", 1)
+    assert assert_count("experiences?partner__name=Jack", 1)
+    assert assert_count("experiences?partner__name=Jack&partner__partnerType=Cars", 1)
+    assert "partner" in return_one("experiences?partner__exists")
+    assert "name" in return_one("experiences?partner__exists")["partner"]
+    assert "partnerType" in return_one("experiences?partner__exists")["partner"]
 
     exp_4 = post_experience(
         {
             "name": "exp_4",
             "cutOffTime": 20,
-            "organizer": {"name": "John", "organizerType": "Boats"},
+            "partner": {"name": "John", "partnerType": "Boats"},
         },
     )
     assert assert_count("experiences?", 4)
     assert assert_count("experiences?$limit=2", 2)
     assert assert_count("experiences?$skip=1", 3)
-    assert assert_count("experiences?organizer__exists", 2)
-    assert assert_count("experiences?$limit=1&organizer__exists", 1)
-    assert assert_count("experiences?$skip=1&organizer__exists", 1)
-    assert assert_count("experiences?organizer__name=Jack", 1)
-    assert "organizer" in return_one("experiences?organizer__name=Jack")
-    assert "name" in return_one("experiences?organizer__name=Jack")["organizer"]
-    assert return_one("experiences?organizer__name=Jack")["organizer"]["name"] == "Jack"
-    assert (
-        "organizerType" in return_one("experiences?organizer__name=Jack")["organizer"]
-    )
+    assert assert_count("experiences?partner__exists", 2)
+    assert assert_count("experiences?$limit=1&partner__exists", 1)
+    assert assert_count("experiences?$skip=1&partner__exists", 1)
+    assert assert_count("experiences?partner__name=Jack", 1)
+    assert "partner" in return_one("experiences?partner__name=Jack")
+    assert "name" in return_one("experiences?partner__name=Jack")["partner"]
+    assert return_one("experiences?partner__name=Jack")["partner"]["name"] == "Jack"
+    assert "partnerType" in return_one("experiences?partner__name=Jack")["partner"]
 
     exp_5 = post_experience(
         {
             "name": "exp_5",
             "cutOffTime": 20,
-            "organizer": {"name": "John", "organizerType": "Boats"},
+            "partner": {"name": "John", "partnerType": "Boats"},
             "images": [
                 {
                     "urlHigh": "High_1",

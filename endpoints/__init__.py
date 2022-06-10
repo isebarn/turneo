@@ -80,9 +80,9 @@ class Resource(_Resource):
 
 
 api = Namespace("api", description="")
-organizer_base = api.model('organizer_base', models.Organizer.base())
-organizer_reference = api.model('organizer_reference', models.Organizer.reference())
-organizer_full = api.model('organizer', models.Organizer.model(api))
+partner_base = api.model('partner_base', models.Partner.base())
+partner_reference = api.model('partner_reference', models.Partner.reference())
+partner_full = api.model('partner', models.Partner.model(api))
 meetingPoint_base = api.model('meetingPoint_base', models.MeetingPoint.base())
 meetingPoint_reference = api.model('meetingPoint_reference', models.MeetingPoint.reference())
 meetingPoint_full = api.model('meetingPoint', models.MeetingPoint.model(api))

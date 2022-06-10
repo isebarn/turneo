@@ -465,9 +465,9 @@ class EmbeddedDocument(_EmbeddedDocument):
         }
 
 
-class Organizer(EmbeddedDocument):
+class Partner(EmbeddedDocument):
     name = StringField()
-    organizerType = StringField()
+    partnerType = StringField()
     partnerId = StringField()
 
 
@@ -530,9 +530,9 @@ class Experiences(Extended):
     video = StringField()
     otherNotes = StringField()
     commission = IntField()
-    mimimumParticipants = IntField()
+    minimumParticipants = IntField()
     cutOffTime = IntField()
-    organizer = EmbeddedDocumentField(Organizer)
+    partner = EmbeddedDocumentField(Partner)
     meetingPoint = EmbeddedDocumentField(MeetingPoint)
     pickup = EmbeddedDocumentField(Pickup)
     duration = EmbeddedDocumentField(Duration)
@@ -610,7 +610,7 @@ class Bookings(Extended):
     start = DateTimeField()
     privateGroup = BooleanField(default=False)
     bookingStatus = StringField(default="pending")
-    organiserConfirmationCode = StringField()
+    partnerConfirmationCode = StringField()
     bookingLastModified = DateTimeField()
     travelerInformation = EmbeddedDocumentField(TravelerInformation)
     notes = EmbeddedDocumentField(Notes)
