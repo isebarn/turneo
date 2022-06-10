@@ -62,8 +62,12 @@ def available_bookings_check(sender, document):
         filter(
             lambda x: x.time.isoformat() == document.start.replace("Z", ""),
             rate.dates,
-        )
+        ),
+        None,
     )
+
+    if not item:
+        abort(400, "Not enough slots available for booking")
 
     if document.privateGroup:
         private_group(rate, item, document)

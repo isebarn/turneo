@@ -3,6 +3,8 @@ import requests
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from dateutil.parser import isoparse
+
 
 url = "http://127.0.0.1:5000/api/{}"
 
@@ -918,3 +920,31 @@ def test_patch_rate():
         rate["dates"][3]["availableQuantity"] - 2
         == rate_updated["dates"][3]["availableQuantity"]
     )
+
+
+def test_booking_with_incorrect_datetime():
+    clean()
+
+    rate = post_rate()
+
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": (
+                isoparse(rate["dates"][-1]["time"]) + timedelta(days=3)
+            ).isoformat(),
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert booking["message"] == "Not enough slots available for booking"
