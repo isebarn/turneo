@@ -108,7 +108,7 @@ def put(endpoint, data):
 
 
 def assert_count(query, count):
-    return len(get(query)) == count
+    assert len(get(query)) == count
 
 
 def return_one(query):
@@ -126,19 +126,19 @@ def test_experience():
     clean()
 
     exp_1 = post_experience({"name": "exp_1", "cutOffTime": 10})
-    assert assert_count("experiences", 1)
+    assert_count("experiences", 1)
 
     exp_2 = post_experience({"name": "exp_2", "cutOffTime": 20})
 
-    assert assert_count("experiences", 2)
-    assert assert_count("experiences?name=exp_2", 1)
-    assert assert_count("experiences?cutOffTime__gt=15", 1)
-    assert assert_count("experiences?cutOffTime__gt=19", 1)
-    assert assert_count("experiences?cutOffTime__gte=19", 1)
-    assert assert_count("experiences?cutOffTime__gte=20", 1)
-    assert assert_count("experiences?cutOffTime__gt=20", 0)
-    assert assert_count("experiences?cutOffTime__lt=20", 1)
-    assert assert_count("experiences?cutOffTime__lte=20", 2)
+    assert_count("experiences", 2)
+    assert_count("experiences?name=exp_2", 1)
+    assert_count("experiences?cutOffTime__gt=15", 1)
+    assert_count("experiences?cutOffTime__gt=19", 1)
+    assert_count("experiences?cutOffTime__gte=19", 1)
+    assert_count("experiences?cutOffTime__gte=20", 1)
+    assert_count("experiences?cutOffTime__gt=20", 0)
+    assert_count("experiences?cutOffTime__lt=20", 1)
+    assert_count("experiences?cutOffTime__lte=20", 2)
 
     exp_3 = post_experience(
         {
@@ -147,10 +147,10 @@ def test_experience():
             "partner": {"name": "Jack", "partnerType": "Cars"},
         },
     )
-    assert assert_count("experiences?", 3)
-    assert assert_count("experiences?partner__exists", 1)
-    assert assert_count("experiences?partner__name=Jack", 1)
-    assert assert_count("experiences?partner__name=Jack&partner__partnerType=Cars", 1)
+    assert_count("experiences?", 3)
+    assert_count("experiences?partner__exists", 1)
+    assert_count("experiences?partner__name=Jack", 1)
+    assert_count("experiences?partner__name=Jack&partner__partnerType=Cars", 1)
     assert "partner" in return_one("experiences?partner__exists")
     assert "name" in return_one("experiences?partner__exists")["partner"]
     assert "partnerType" in return_one("experiences?partner__exists")["partner"]
@@ -162,13 +162,13 @@ def test_experience():
             "partner": {"name": "John", "partnerType": "Boats"},
         },
     )
-    assert assert_count("experiences?", 4)
-    assert assert_count("experiences?$limit=2", 2)
-    assert assert_count("experiences?$skip=1", 3)
-    assert assert_count("experiences?partner__exists", 2)
-    assert assert_count("experiences?$limit=1&partner__exists", 1)
-    assert assert_count("experiences?$skip=1&partner__exists", 1)
-    assert assert_count("experiences?partner__name=Jack", 1)
+    assert_count("experiences?", 4)
+    assert_count("experiences?$limit=2", 2)
+    assert_count("experiences?$skip=1", 3)
+    assert_count("experiences?partner__exists", 2)
+    assert_count("experiences?$limit=1&partner__exists", 1)
+    assert_count("experiences?$skip=1&partner__exists", 1)
+    assert_count("experiences?partner__name=Jack", 1)
     assert "partner" in return_one("experiences?partner__name=Jack")
     assert "name" in return_one("experiences?partner__name=Jack")["partner"]
     assert return_one("experiences?partner__name=Jack")["partner"]["name"] == "Jack"
@@ -192,11 +192,11 @@ def test_experience():
         },
     )
 
-    assert assert_count("experiences?", 5)
-    assert assert_count("experiences?images__exists", 5)
-    assert assert_count("experiences?images__ne=[]", 1)
-    assert assert_count("experiences?images__0__urlHigh=High_1", 1)
-    assert assert_count("experiences?images__1__urlHigh=High_2", 1)
+    assert_count("experiences?", 5)
+    assert_count("experiences?images__exists", 5)
+    assert_count("experiences?images__ne=[]", 1)
+    assert_count("experiences?images__0__urlHigh=High_1", 1)
+    assert_count("experiences?images__1__urlHigh=High_2", 1)
     assert get("experiences/{}".format(exp_5["id"]))
     assert "images" in get("experiences/{}".format(exp_5["id"]))
     assert get("experiences/{}".format(exp_5["id"]))["images"][0]["urlHigh"]
@@ -224,7 +224,7 @@ def test_experience_default_sort():
     exp_4 = post_experience(
         {"name": "exp_4", "rating": {"score": 3.8, "reviewsCount": 32}}
     )
-    assert assert_count("experiences", 4)
+    assert_count("experiences", 4)
 
     assert get("experiences?$sort=rating__score")[0]["id"] == exp_4["id"]
     assert get("experiences?$sort=rating__score")[1]["id"] == exp_2["id"]
@@ -271,13 +271,13 @@ def test_experience_default_values():
 
     exp_1 = post_experience({"name": "exp_1"})
     exp_2 = post_experience({"name": "exp_2", "status": "active"})
-    assert assert_count("experiences", 2)
+    assert_count("experiences", 2)
 
     assert get("experiences/{}".format(exp_1["id"]))["status"] == "draft"
     assert get("experiences/{}".format(exp_2["id"]))["status"] == "active"
 
     patch("experiences/{}".format(exp_1["id"]), {"status": "active"})
-    assert assert_count("experiences?status=active", 2)
+    assert_count("experiences?status=active", 2)
 
 
 def test_experience_minimum_rate():
@@ -390,7 +390,7 @@ def test_experience_minimum_rate():
     )
 
     assert_count("experiences", 3)
-    assert assert_count("experiences?meetingPoint__exists", 2)
+    assert_count("experiences?meetingPoint__exists", 2)
     assert return_one("experiences?meetingPoint__exists&name=exp_3").get(
         "meetingPoint"
     ).get("location").get("coordinates") == [50, 0.5]
@@ -426,8 +426,8 @@ def test_experience_id_rates():
         ],
     }
 
-    fromDate = today + timedelta(days=3)
-    untilDate = today + timedelta(days=5)
+    fromDate = today + timedelta(days=1)
+    untilDate = today + timedelta(days=4)
 
     exp_1 = post("experiences", {"name": "exp_1"})
     exp_2 = post("experiences", {"name": "exp_2"})
@@ -448,37 +448,37 @@ def test_experience_id_rates():
         "experiences/{}/rates".format(exp_2["id"]), {**baseRate, "maxParticipants": 6}
     )
 
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}".format(
             exp_1["id"], fromDate, untilDate
         ),
         2,
     )
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}".format(
             exp_2["id"], fromDate, untilDate
         ),
         3,
     )
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}&maxParticipants=2".format(
             exp_2["id"], fromDate, untilDate
         ),
         1,
     )
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}&maxParticipants__gt=2".format(
             exp_2["id"], fromDate, untilDate
         ),
         2,
     )
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}&maxParticipants__lt=2".format(
             exp_2["id"], fromDate, untilDate
         ),
         0,
     )
-    assert assert_count(
+    assert_count(
         "experiences/{}/rates?from={}&until={}&maxParticipants__gte=2".format(
             exp_2["id"], fromDate, untilDate
         ),
@@ -825,7 +825,7 @@ def test_experienceId_rateId_query():
         },
     )
 
-    assert assert_count("rates", 3)
+    assert_count("rates", 3)
 
     assert (
         get("experiences/{}/rates/{}".format(exp_1["id"], test_rate["id"]))[

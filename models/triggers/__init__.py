@@ -44,6 +44,9 @@ def private_group(rate, item, document):
 
 
 def available_bookings_check(sender, document):
+    if document.id:
+        return
+
     rate = Rates.objects.get(id=document.rateId.id)
     experience = Experiences.objects.get(id=rate.experienceId.id)
 
