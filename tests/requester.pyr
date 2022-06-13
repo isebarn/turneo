@@ -1,0 +1,68 @@
+# http://docs.python-requests.org/en/master/user/quickstart/
+
+env_file = ''
+# install sublime text
+# ctrl + alt + p => install package -> requester
+#  [
+# 	{ "keys": ["ctrl+alt+p"], "command": "requester", "args": {"concurrency": 1}},
+# 	{ "keys": ["ctrl+alt+l"], "command": "requester_close_response_tabs"},
+# 	{ "keys": ["ctrl+alt+k"], "command": "toggle_comment", "args": { "block": true } },
+# ]
+
+
+###env
+url = "http://34.229.126.196:5000/api/{}"
+fromDate = "2022-06-13"
+untilDate = "2022-06-16"
+fromto = "from={}&until={}".format(fromDate, untilDate)
+###env
+
+
+get(url.format("experiences"))
+post(url.format("experiences"), json={"name": "exp_1", "cutOffTime": 24}, name="exp_1")
+
+
+post(url.format("experiences/{}/rates".format(exp_1.json()['id'])), json={
+    "maxParticipants": 10,
+    "privateGroup": {
+        "minimumGroupRetailPrice": {"amount": 40, "currency": "EUR"},
+    },
+    "rateTypesPrices": [
+        {"rateType": "Adult", "retailPrice": {"amount": 40, "currency": "EUR"}}
+    ],
+    "dateRange": {
+        "from": fromDate,
+        "until": untilDate,
+    },
+    "startTimes": [
+        {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]},
+        {
+            "timeSlot": "12:30",
+            "daysOfTheWeek": [
+                6,
+            ],
+        },
+    ],
+}, name="rate_1")
+
+get(url.format("experiences/{}/rates?{}".format(exp_1.json()['id'], fromto)))
+
+get(url.format("bookings"))
+
+post(url.format("bookings"), json={
+    "rateId": rate_1.json()["id"],
+    "travelerInformation": {
+        "firstName": "John",
+        "lastName": "Doe",
+    },
+    "notes": {
+        "fromSeller": "This is an imaginary person",
+        "fromTraveller": "I am an imaginary person",
+    },
+    "start": rate_1.json()["dates"][3]["time"],
+    "privateGroup": True,
+    "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+})
+
+
+get(url.format("bookings"))

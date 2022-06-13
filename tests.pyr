@@ -1,0 +1,131 @@
+# http://docs.python-requests.org/en/master/user/quickstart/
+
+env_file = ''
+
+###env
+experiences = "127.0.0.1:5000/api/experiences"
+rates = "127.0.0.1:5000/api/rates"
+bookings = "127.0.0.1:5000/api/bookings"
+###env
+
+post(experiences, json={
+  "name": "Local food & wine tasting tour",
+  "code": "FoodWineTour",
+  "category": "Food & drink",
+  "highlight": "Lunch and wine-tasting at a local winery established in 1933 that won 3x Decanter gold.",
+  "organizer": {
+    "name": "Food & wine tours Ltd",
+    "organizerType": "Organizer",
+    "partnerId": "774f2f7b-53d5-4752-8f40-464ad5f76a90"
+  },
+  "meetingPoint": {
+    "address": "Wine street 25",
+    "city": "London",
+    "country": "United Kingdom",
+    "gmapsLink": "https://www.google.com/maps/@51.5039977,-0.1295769,14z"
+  },
+  "pickup": {
+    "value": "Yes",
+    "rules": "Pick-up possible only within 5km from the meeting point. Please confirm pick-up with us after you make the booking."
+  },
+  "description": "A description of an experience comes here.",
+  "duration": {
+    "days": 0,
+    "hours": 2,
+    "minutes": 30
+  },
+  "cancellationPolicy": "Fully refundable up to 24h before start",
+  "externalLinks": {
+    "name": "Tripadvisor",
+    "url": "https://www.tripadvisor.com/tripadvisorId",
+    "id": "1234-67890"
+  },
+  "images": [
+    {
+      "urlHigh": "https://www.exampleURL.com/image.jpg",
+      "urlLow": "https://www.exampleURL.com/image.jpg",
+      "altText": "Vineyard"
+    }
+  ],
+  "video": "https://www.exampleURL.com/video.jpg",
+  "rating": {
+    "score": 4.3,
+    "reviewsCount": 1800
+  },
+  "included": [
+    {
+      "name": "Transport to and from the winery",
+      "exclusion_id": "774f2f7b-53d5-4752-8f40-464ad5f76a90"
+    }
+  ],
+  "excluded": [
+    {
+      "name": "Transport to and from the winery",
+      "exclusion_id": "774f2f7b-53d5-4752-8f40-464ad5f76a90"
+    }
+  ],
+  "otherNotes": "This is a tour of a working winery",
+  "commission": 20,
+  "mimimumParticipants": 2,
+  "cutOffTime": 6
+})
+
+get(experiences)
+
+post(rates, json={
+  "experienceId": "629a24f306df9062697a8ee6",
+  "maxParticipants": 10,
+  "rateTypesPrices": [
+    {
+      "rateType": "Adult",
+      "retailPrice": {
+        "amount": 40,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "privateGroup": {
+    "privateAllowed": "TRUE",
+    "minimumGroupRetailPrice": {
+      "amount": 40,
+      "currency": "EUR"
+    }
+  },
+  "dateRange": {
+    "from": "2022-05-15",
+    "until": "2022-11-15"
+  },
+  "startTimes": [
+    {
+      "timeSlot": "11:30",
+      "daysOfTheWeek": [
+        "Monday"
+      ]
+    }
+  ]
+})
+
+get(rates)
+
+post(bookings, json={
+  "travelerInformation": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@gmail.com"
+  },
+  "notes": {
+    "fromSeller": "This is an imaginary person",
+    "fromTraveller": "I am an imaginary person"
+  },
+  "rateId": "629a267406df9062697a8ee9",
+  "start": "2022-03-14T11:00:00Z",
+  "privateGroup": "TRUE",
+  "ratesQuantity": [
+    {
+      "rateType": "Adult",
+      "quantity": 2
+    }
+  ]
+})
+
+get(bookings)

@@ -1,0 +1,56 @@
+# http://docs.python-requests.org/en/master/user/quickstart/
+
+env_file = ''
+
+###env
+url = "http://127.0.0.1:5000/api/{}"
+###env
+
+post(url.format("experience"), json={
+	"status": "hehe"	
+}, name="exp")
+
+post(url.format("rates"), json={
+	"currency": "asd"	
+})
+
+post(url.format("rates"), json={
+	"currency": "asd",
+	"experience": {
+		"status": "hoho"
+	}	
+})
+
+post(url.format("rates"), json={
+	"currency": "asd",
+	"experience": exp.json()['id']	
+})
+
+post(url.format("rates"), json={
+	"currency": "asd",
+	"experience": exp.json()
+})
+
+get(url.format("rates?$include=experience"))
+get(url.format("rates"))
+get(url.format("experience"))
+
+put(url.format("rates"), json={
+    "_cls": "Rates",
+    "currency": "EUR",
+    "id": "6290b152ad1489b7c53e63b7"
+})
+
+patch(url.format('rates'), json={
+	"id": "6290b5ef84e2d3a388dc1e83",
+	"experience": "6290b5ef84e2d3a388dc1e82"
+})
+
+post(url.format("rates"), json={
+    "_cls": "Rates",
+    "excluded": [
+    	{
+    		"name": "god"
+    	}
+    ]
+})

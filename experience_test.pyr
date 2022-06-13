@@ -1,0 +1,65 @@
+# http://docs.python-requests.org/en/master/user/quickstart/
+
+env_file = ''
+
+###env
+experiences = "127.0.0.1:5000/api/experiences"
+rates = "127.0.0.1:5000/api/rates"
+bookings = "127.0.0.1:5000/api/bookings"
+###env
+
+post(experiences, json={
+  "name": "experience 1",
+  "mimimumParticipants": 2,
+}, name="experience")
+
+post(rates, json={
+  "experienceId": experience.json()['id'],
+  "maxParticipants": 10,
+  "rateTypesPrices": [
+    {
+      "rateType": "Adult",
+      "retailPrice": {
+        "amount": 40,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "dateRange": {
+    "from": "2022-05-15",
+    "until": "2022-11-15"
+  },
+  "startTimes": [
+    {
+      "timeSlot": "11:30",
+    }
+  ]
+})
+
+post(experiences, json={
+  "name": "experience 2",
+  "mimimumParticipants": 2,
+}, name="experience")
+
+post(rates, json={
+  "experienceId": experience.json()['id'],
+  "maxParticipants": 8,
+  "rateTypesPrices": [
+    {
+      "rateType": "Adult",
+      "retailPrice": {
+        "amount": 60,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "dateRange": {
+    "from": "2022-05-15",
+    "until": "2022-11-15"
+  },
+  "startTimes": [
+    {
+      "timeSlot": "11:30",
+    }
+  ]
+})
