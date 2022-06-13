@@ -40,11 +40,7 @@ class Resource(_Resource):
         if request.method == "GET":
             request.args = tmp
 
-            [
-                tmp.update({k: v.split(",")})
-                for k, v in tmp.items()
-                if k.endswith("__in")
-            ]
+            [tmp.update({k: v.split(",")}) for k, v in tmp.items() if "," in k]
 
             [
                 tmp.update({k: v.split(",")})
