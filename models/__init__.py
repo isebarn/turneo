@@ -198,7 +198,10 @@ class Extended(Document):
         item = cls.objects.get(id=data.pop("id"))
 
         for key, value in data.items():
-            setattr(item, key, cls.fix_data(key, value))
+            if isinstance(value, dict):
+                cls._fields[key].document_type_obj.patch(item[key], value)
+            else:
+                setattr(item, key, cls.fix_data(key, value))
 
         item.save()
 
@@ -413,6 +416,14 @@ class Extended(Document):
 
 class EmbeddedDocument(_EmbeddedDocument):
     meta = {"abstract": True, "allow_inheritance": True}
+
+    @classmethod
+    def patch(cls, item, data):
+        for key, value in data.items():
+            if isinstance(value, dict):
+                cls._fields[key].document_type_obj.patch(item[key], value)
+            else:
+                setattr(item, key, value)
 
     @classmethod
     def base(cls):

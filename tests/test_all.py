@@ -966,3 +966,49 @@ def test_rates_calendar_in_experience():
             (today + timedelta(days=4)).isoformat(),
         )
     )
+
+
+def test_patch_nested_embedded():
+    clean()
+
+    rate = post_rate()
+
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert (
+        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+    )
+
+    patch(
+        "bookings/{}".format(booking["id"]),
+        {"travelerInformation": {"firstName": "Bobby"}},
+    )
+
+    assert (
+        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+    )
+
+    assert (
+        get("bookings/{}".format(booking["id"]))["travelerInformation"]["firstName"]
+        == "Bobby"
+    )
+    assert (
+        get("bookings/{}".format(booking["id"]))["travelerInformation"]["lastName"]
+        == "Doe"
+    )
