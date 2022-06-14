@@ -8,6 +8,7 @@ from requests import get
 from flask import Flask
 from flask import request
 from flask import g
+from flask import abort
 from flask_restx import Namespace
 from flask_restx import Resource as _Resource
 from flask_restx.fields import DateTime
@@ -171,7 +172,10 @@ experiences_basic = api.clone("experiences_basic", experiences_full)
 experiences_full = api.clone(
     "experiences",
     experiences_full,
-    {"minPrice": Nested(retailPrice_full), "rateCalendar": List(Nested(rates_full))},
+    {
+        "minPrice": Nested(retailPrice_full, skip_none=True),
+        "rateCalendar": List(Nested(rates_full)),
+    },
 )
 
 rates_full = api.clone(
@@ -230,6 +234,16 @@ class ExperiencesController(Resource):
 class BaseExperiencesController(Resource):
     @api.marshal_with(api.models.get("experiences"), skip_none=True)
     def get(self, experiences_id):
+        if "from" in request.args and "until" in request.args:
+            request.args["id"] = experiences_id
+            result = models.Experiences.qry(request.args)
+            if not any(result):
+                abort(
+                    404,
+                    "Experience with this id does not exist or has no rates in the timerange",
+                )
+            return next(iter(result), {})
+
         return models.Experiences.objects.get(id=experiences_id).to_json()
 
     @api.marshal_with(api.models.get("experiences"), skip_none=True)

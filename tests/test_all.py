@@ -416,7 +416,7 @@ def test_experience_id_rates():
             "until": (today + timedelta(days=4)).isoformat(),
         },
         "startTimes": [
-            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2]},
+            {"timeSlot": "11:30", "daysOfTheWeek": [0, 1, 2, 3, 4, 5, 6]},
             {
                 "timeSlot": "12:30",
                 "daysOfTheWeek": [
@@ -948,3 +948,21 @@ def test_booking_with_incorrect_datetime():
     )
 
     assert booking["message"] == "Not enough slots available for booking"
+
+
+def test_rates_calendar_in_experience():
+    clean()
+    today = datetime(
+        datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
+    )
+
+    rate = post_rate()
+
+    assert "rateCalendar" in return_one("experiences")
+    assert "rateCalendar" in get(
+        "experiences/{}?from={}&until={}".format(
+            rate["experienceId"],
+            (today + timedelta(days=3)).isoformat(),
+            (today + timedelta(days=4)).isoformat(),
+        )
+    )

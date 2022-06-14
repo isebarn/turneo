@@ -5,7 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil.parser import isoparse
 from datetime import timezone
-
+from utils.querystring import querystring
 
 # This file contains querysets
 # What are querysets
@@ -90,13 +90,18 @@ class ExperiencesQuerySet(QuerySet):
                     0
                 ].get("retailPrice", {})
 
+            query_string = {"$queryset": "fetch", "experienceId": experience["id"]}
+
             if fromDate and untilDate:
-                rates = requests.get(
-                    "http://localhost:5000/api/rates?$queryset=fetch&experienceId={}&dateRange__fromDate__gte={}&dateRange__fromDate__lte={}".format(
-                        experience["id"], fromDate, untilDate
-                    )
+                query_string.update(
+                    {
+                        "dates__time__gte": fromDate,
+                        "dates__time__lte": untilDate,
+                    }
                 )
-                experience.update({"rateCalendar": rates.json()})
+
+            rates = requests.get("http://localhost:5000/api/rates", query_string)
+            experience.update({"rateCalendar": rates.json()})
 
         if fromDate and untilDate:
             experiences = list(
@@ -118,7 +123,6 @@ class ExperiencesQuerySet(QuerySet):
 class BookingsQuerySet(QuerySet):
     def default(self, cls, filters):
         bookings = cls.fetch(filters)
-
 
         rates = cls.rateId.document_type_obj.fetch(
             {"id__in": list(set([x["rateId"] for x in bookings]))}
