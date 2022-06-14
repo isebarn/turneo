@@ -11,7 +11,7 @@ env_file = ''
 
 
 ###env
-url = "http://34.229.126.196:5000/api/{}"
+url = "http://127.0.0.1:5000/api/{}"
 fromDate = "2022-06-13"
 untilDate = "2022-06-16"
 fromto = "from={}&until={}".format(fromDate, untilDate)

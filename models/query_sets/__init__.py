@@ -69,8 +69,8 @@ class RatesQuerySet(QuerySet):
 class ExperiencesQuerySet(QuerySet):
     def default(self, cls, filters):
         # These can be passed to include rates
-        fromDate = filters.pop("fromDate", None)
-        untilDate = filters.pop("untilDate", None)
+        fromDate = filters.pop("from", None)
+        untilDate = filters.pop("until", None)
         limit = filters.pop("$limit", None)
         skip = filters.pop("$skip", None)
 
@@ -100,7 +100,9 @@ class ExperiencesQuerySet(QuerySet):
                     }
                 )
 
-            rates = requests.get("http://localhost:5000/api/rates", query_string)
+            rates = requests.get(
+                querystring("http://localhost:5000/api/rates", query_string)
+            )
             experience.update({"rateCalendar": rates.json()})
 
         if fromDate and untilDate:

@@ -3,6 +3,7 @@ from datetime import timedelta
 from datetime import timezone
 from requests import get
 from requests import post
+from requests import patch
 from requests import put
 from dateutil.parser import isoparse
 
@@ -75,8 +76,8 @@ class ExperienceRateController(Resource):
         return {}
 
     @api.marshal_with(api.models.get("rates"), skip_none=True)
-    def put(self, experience_id, rate_id):
-        return put(
+    def patch(self, experience_id, rate_id):
+        return patch(
             "http://localhost:5000/api/rates/{}".format(rate_id),
             json={**request.get_json(), "experienceId": experience_id},
         ).json()

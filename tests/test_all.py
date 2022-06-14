@@ -890,7 +890,7 @@ def test_put_rate():
 
     rate["maxParticipants"] -= 1
 
-    rate_updated = put(
+    rate_updated = patch(
         "experiences/{}/rates/{}".format(rate["experienceId"], rate["id"]),
         rate,
     )
