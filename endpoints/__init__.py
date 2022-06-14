@@ -307,7 +307,10 @@ class BookingsController(Resource):
 
     @api.marshal_with(api.models.get("bookings"), skip_none=True)
     def post(self):
-        return models.Bookings.post(request.get_json())
+        booking = models.Bookings.post(request.get_json())
+        return next(
+            iter(models.Bookings.qry({**request.args, "id": booking["id"]})), {}
+        )
 
     @api.marshal_with(api.models.get("bookings"), skip_none=True)
     def put(self):
@@ -322,7 +325,7 @@ class BookingsController(Resource):
 class BaseBookingsController(Resource):
     @api.marshal_with(api.models.get("bookings"), skip_none=True)
     def get(self, bookings_id):
-        return models.Bookings.objects.get(id=bookings_id).to_json()
+        return next(iter(models.Bookings.qry({**request.args, "id": bookings_id})), {})
 
     @api.marshal_with(api.models.get("bookings"), skip_none=True)
     def put(self, bookings_id):

@@ -1012,3 +1012,30 @@ def test_patch_nested_embedded():
         get("bookings/{}".format(booking["id"]))["travelerInformation"]["lastName"]
         == "Doe"
     )
+
+
+def test_booking_return_json():
+    clean()
+
+    rate = post_rate()
+
+    booking = post(
+        "bookings",
+        {
+            "rateId": rate["id"],
+            "travelerInformation": {
+                "firstName": "John",
+                "lastName": "Doe",
+            },
+            "notes": {
+                "fromSeller": "This is an imaginary person",
+                "fromTraveller": "I am an imaginary person",
+            },
+            "start": rate["dates"][0]["time"],
+            "privateGroup": True,
+            "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
+        },
+    )
+
+    assert booking == get("bookings")[0]
+    assert booking == get("bookings/{}".format(booking["id"]))
