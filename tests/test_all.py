@@ -225,6 +225,8 @@ def test_experience_default_sort():
         {"name": "exp_4", "rating": {"score": 3.8, "reviewsCount": 32}}
     )
     assert_count("experiences", 4)
+    assert_count("experiences?id={}".format(exp_1["id"]), 1)
+    assert_count("experiences?id={},{}".format(exp_1["id"], exp_2["id"]), 2)
 
     assert get("experiences?$sort=rating__score")[0]["id"] == exp_4["id"]
     assert get("experiences?$sort=rating__score")[1]["id"] == exp_2["id"]

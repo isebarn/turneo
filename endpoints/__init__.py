@@ -44,7 +44,7 @@ class Resource(_Resource):
             [
                 tmp.update({"{}__in".format(k): tmp.pop(k).split(",")})
                 for k in list(tmp.keys())
-                if "," in tmp[k]
+                if "," in tmp[k] and not k.startswith("$sort")
             ]
 
             [
