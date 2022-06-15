@@ -183,7 +183,7 @@ experiences_full = api.clone(
 )
 
 rates_full = api.clone(
-    "rates", rates_full, {"dates": List(Nested(dates_full)), "status": String}
+    "rates", rates_full, {"availableDates": List(Nested(dates_full)), "status": String}
 )
 
 price_breakdown = api.clone(

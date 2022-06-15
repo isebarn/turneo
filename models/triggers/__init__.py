@@ -49,8 +49,18 @@ def available_bookings_check(sender, document):
 
     rate = Rates.objects.get(id=document.rateId.id)
     experience = Experiences.objects.get(id=rate.experienceId.id)
+    item = next(
+        filter(
+            lambda x: x.dateId == document.availabilityId,
+            rate.availableDates,
+        ),
+        None,
+    )
 
-    diff = isoparse(document.start) - datetime.now(timezone.utc)
+    if not item:
+        abort(400, "Not enough slots available for booking")
+
+    diff = item.time - datetime.now()
     hours = diff.days * 24 + diff.seconds / 3600
 
     if hours < experience.cutOffTime:
@@ -61,16 +71,6 @@ def available_bookings_check(sender, document):
             ),
         )
 
-    item = next(
-        filter(
-            lambda x: x.time.isoformat() == document.start.replace("Z", ""),
-            rate.dates,
-        ),
-        None,
-    )
-
-    if not item:
-        abort(400, "Not enough slots available for booking")
 
     if document.privateGroup:
         private_group(rate, item, document)

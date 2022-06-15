@@ -200,6 +200,22 @@ class Extended(Document):
         for key, value in data.items():
             if isinstance(value, dict):
                 cls._fields[key].document_type_obj.patch(item[key], value)
+            elif isinstance(value, list) and key == "dates":
+                for v in value:
+                    if "dateId" in v:
+                        date = next(
+                            filter(lambda x: x.dateId == v.get("dateId"), item.dates),
+                            {},
+                        )
+                        if date:
+                            item.dates[item.dates.index(date)] = Dates(**v)
+
+                    else:
+                        item.dates.append(Dates(**v))
+
+                deleted = [x["dateId"] for x in value if len(x) == 1 and "dateId" in x]
+                item.dates = [x for x in item.dates if x.dateId not in deleted]
+
             else:
                 setattr(item, key, cls.fix_data(key, value))
 
@@ -307,7 +323,7 @@ class Extended(Document):
             **{
                 field: List(
                     Nested(
-                        api.models.get(field),
+                        api.models.get(camelize(instance.field.document_type_obj._class_name)),
                         skip_none=True,
                     ),
                 )
@@ -588,6 +604,7 @@ class StartTimes(EmbeddedDocument):
 
 
 class Dates(EmbeddedDocument):
+    dateId = StringField(default=lambda: str(ObjectId()))
     availableQuantity = IntField()
     privateGroupStatus = BooleanField(default=False)
     time = DateTimeField()
@@ -600,7 +617,7 @@ class Rates(Extended):
     maxParticipants = IntField()
     privateGroup = EmbeddedDocumentField(PrivateGroup)
     rateTypesPrices = EmbeddedDocumentListField(RateTypesPrices)
-    dates = EmbeddedDocumentListField(Dates)
+    availableDates = EmbeddedDocumentListField(Dates)
 
 
 class TravelerInformation(EmbeddedDocument):
@@ -623,7 +640,7 @@ class Bookings(Extended):
     meta = {"queryset_class": BookingsQuerySet}
 
     rateId = ReferenceField(Rates, reverse_delete_rule=DENY)
-    start = DateTimeField()
+    availabilityId = StringField()
     privateGroup = BooleanField(default=False)
     bookingStatus = StringField(default="pending")
     partnerConfirmationCode = StringField()

@@ -40,7 +40,7 @@ class RatesQuerySet(QuerySet):
                     {
                         "$match": {
                             "experienceId": ObjectId(filters.get("experienceId")),
-                            "dates": {
+                            "availableDates": {
                                 "$elemMatch": {
                                     "time": {
                                         "$lte": datetime.now() + timedelta(days=60)
@@ -95,8 +95,8 @@ class ExperiencesQuerySet(QuerySet):
             if fromDate and untilDate:
                 query_string.update(
                     {
-                        "dates__time__gte": fromDate,
-                        "dates__time__lte": untilDate,
+                        "availableDates__time__gte": fromDate,
+                        "availableDates__time__lte": untilDate,
                     }
                 )
 
@@ -139,10 +139,13 @@ class BookingsQuerySet(QuerySet):
             experience = next(
                 filter(lambda x: x["id"] == rate["experienceId"], experiences)
             )
+            date = next(
+                filter(lambda x: x["dateId"] == booking["availabilityId"], rate["availableDates"]), None
+            )
 
             booking["ratesBooked"] = {
                 "rateId": booking["rateId"],
-                "start": booking["start"],
+                "start": isoparse(date.get("time", {}).get("$date")),
                 "ratesQuantity": booking["ratesQuantity"],
             }
 
@@ -169,13 +172,12 @@ class BookingsQuerySet(QuerySet):
 
             booking["cancellationFee"] = {
                 "amount": booking["price"]["finalRetailPrice"]["amount"]
-                if (
-                    isoparse(booking["start"]["$date"]) - datetime.now(timezone.utc)
-                ).days
+                if (booking["ratesBooked"]["start"] - datetime.now(timezone.utc)).days
                 else 0,
                 "currency": booking["price"]["finalRetailPrice"]["currency"],
             }
 
             booking["bookingCreated"] = ObjectId(booking["id"]).generation_time
+            booking['start'] = booking['ratesBooked']['start']
 
         return bookings

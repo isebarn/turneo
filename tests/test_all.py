@@ -497,6 +497,7 @@ def test_booking_trigger():
         "bookings",
         {
             "rateId": rate["id"],
+            "availabilityId": rate["availableDates"][3]["dateId"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -505,14 +506,13 @@ def test_booking_trigger():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[3]["availableQuantity"] == 8
     )
 
 
@@ -532,7 +532,7 @@ def test_booking_trigger_private_group_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 12}],
         },
@@ -558,7 +558,7 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -584,7 +584,7 @@ def test_booking_trigger_private_group_already_booked():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -604,7 +604,7 @@ def test_booking_trigger_private_group_already_booked():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -631,7 +631,7 @@ def test_booking_trigger_not_enough_slots():
                     "fromSeller": "This is an imaginary person",
                     "fromTraveller": "I am an imaginary person",
                 },
-                "start": rate["dates"][0]["time"],
+                "availabilityId": rate["availableDates"][0]["dateId"],
                 "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
             },
         )
@@ -650,7 +650,7 @@ def test_booking_trigger_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
@@ -687,7 +687,7 @@ def test_booking_within_24_hours_of_cutoffTime():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -767,7 +767,7 @@ def test_email():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -866,7 +866,7 @@ def test_delete_rate_fail():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -887,7 +887,7 @@ def test_put_rate():
 
     rate = post_rate()
 
-    for item in rate["dates"]:
+    for item in rate["availableDates"]:
         item["availableQuantity"] -= 1
 
     rate["maxParticipants"] -= 1
@@ -899,7 +899,7 @@ def test_put_rate():
 
     rate = post_rate()
 
-    for org, new in zip(rate["dates"], rate_updated["dates"]):
+    for org, new in zip(rate["availableDates"], rate_updated["availableDates"]):
         assert (org["availableQuantity"] - 1) == new["availableQuantity"]
 
     assert rate["maxParticipants"] - 1 == rate_updated["maxParticipants"]
@@ -910,21 +910,21 @@ def test_patch_rate():
 
     rate = post_rate()
 
-    rate["dates"][3]["availableQuantity"] -= 2
+    rate["availableDates"][3]["availableQuantity"] -= 2
     rate_updated = patch(
         "experiences/{}/rates/{}/availability".format(rate["experienceId"], rate["id"]),
-        rate["dates"][3],
+        rate["availableDates"][3],
     )
 
     rate = post_rate()
 
     assert (
-        rate["dates"][3]["availableQuantity"] - 2
-        == rate_updated["dates"][3]["availableQuantity"]
+        rate["availableDates"][3]["availableQuantity"] - 2
+        == rate_updated["availableDates"][3]["availableQuantity"]
     )
 
 
-def test_booking_with_incorrect_datetime():
+def test_booking_with_incorrect_dateId():
     clean()
 
     rate = post_rate()
@@ -941,9 +941,7 @@ def test_booking_with_incorrect_datetime():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": (
-                isoparse(rate["dates"][-1]["time"]) + timedelta(days=3)
-            ).isoformat(),
+            "availabilityId": "asd",
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -987,14 +985,14 @@ def test_patch_nested_embedded():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[0]["availableQuantity"] == 8
     )
 
     patch(
@@ -1003,7 +1001,7 @@ def test_patch_nested_embedded():
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("dates", [])[0]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[0]["availableQuantity"] == 8
     )
 
     assert (
@@ -1033,7 +1031,7 @@ def test_booking_return_json():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "start": rate["dates"][0]["time"],
+            "availabilityId": rate["availableDates"][0]["dateId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -1041,3 +1039,28 @@ def test_booking_return_json():
 
     assert booking == get("bookings")[0]
     assert booking == get("bookings/{}".format(booking["id"]))
+
+
+def test_rates_dates():
+    clean()
+
+    rate = post_rate()
+
+    count = len(rate["availableDates"])
+    availableQuantity = rate["availableDates"][0]["availableQuantity"]
+    assert patch(
+            "rates/{}".format(rate["id"]),
+            {
+                "availableDates": [
+                    {
+                        "dateId": rate["availableDates"][0]["dateId"],
+                        "availableQuantity": rate["availableDates"][0]["availableQuantity"] - 5,
+                    }
+                ]
+            },
+        )["availableDates"][0]["availableQuantity"] == availableQuantity - 5
+
+    assert (
+        get("rates/{}".format(rate["id"]))["availableDates"][0]["availableQuantity"]
+        == availableQuantity - 5
+    )

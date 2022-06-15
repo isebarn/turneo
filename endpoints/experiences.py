@@ -25,14 +25,14 @@ class ExperiencesController(Resource):
             abort(400, "from or until missing from query")
 
         request.args["experienceId__id"] = experience_id
-        request.args["dates__time__gte"] = request.args.pop("from")
-        request.args["dates__time__lte"] = request.args.pop("until")
+        request.args["availableDates__time__gte"] = request.args.pop("from")
+        request.args["availableDates__time__lte"] = request.args.pop("until")
 
         return Rates.fetch(request.args)
 
     def post(self, experience_id):
         rate = request.get_json()
-        rate["dates"] = []
+        rate["availableDates"] = []
 
         fromDate = isoparse(rate["dateRange"]["from"])
         untilDate = isoparse(rate["dateRange"]["until"])
@@ -42,7 +42,7 @@ class ExperiencesController(Resource):
                 if (fromDate + timedelta(days=idx)).weekday() in startTime[
                     "daysOfTheWeek"
                 ]:
-                    rate["dates"].append(
+                    rate["availableDates"].append(
                         {
                             "time": (
                                 fromDate
@@ -90,7 +90,7 @@ class ExperienceRateController(Resource):
 @api.route("/experiences/<experience_id>/rates/<rate_id>/availability")
 class ExperienceRateAvailabilityController(Resource):
     @api.marshal_with(api.models.get("rates"), skip_none=True)
-    @api.expect(api.models.get("dates"))
+    @api.expect(api.models.get("availableDates"))
     def patch(self, experience_id, rate_id):
         rate = Rates.objects.get(id=rate_id)
         data = request.get_json()
@@ -98,7 +98,7 @@ class ExperienceRateAvailabilityController(Resource):
         item = next(
             filter(
                 lambda x: x.time == isoparse(data.get("time").replace("Z", "")),
-                rate.dates,
+                rate.availableDates,
             ),
             None,
         )
