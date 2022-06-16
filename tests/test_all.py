@@ -512,7 +512,10 @@ def test_booking_trigger():
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("availableDates", [])[3]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[3][
+            "availableQuantity"
+        ]
+        == 8
     )
 
 
@@ -992,7 +995,10 @@ def test_patch_nested_embedded():
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("availableDates", [])[0]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[0][
+            "availableQuantity"
+        ]
+        == 8
     )
 
     patch(
@@ -1001,7 +1007,10 @@ def test_patch_nested_embedded():
     )
 
     assert (
-        get("rates/{}".format(rate["id"])).get("availableDates", [])[0]["availableQuantity"] == 8
+        get("rates/{}".format(rate["id"])).get("availableDates", [])[0][
+            "availableQuantity"
+        ]
+        == 8
     )
 
     assert (
@@ -1048,17 +1057,23 @@ def test_rates_dates():
 
     count = len(rate["availableDates"])
     availableQuantity = rate["availableDates"][0]["availableQuantity"]
-    assert patch(
+    assert (
+        patch(
             "rates/{}".format(rate["id"]),
             {
                 "availableDates": [
                     {
                         "dateId": rate["availableDates"][0]["dateId"],
-                        "availableQuantity": rate["availableDates"][0]["availableQuantity"] - 5,
+                        "availableQuantity": rate["availableDates"][0][
+                            "availableQuantity"
+                        ]
+                        - 5,
                     }
                 ]
             },
-        )["availableDates"][0]["availableQuantity"] == availableQuantity - 5
+        )["availableDates"][0]["availableQuantity"]
+        == availableQuantity - 5
+    )
 
     assert (
         get("rates/{}".format(rate["id"]))["availableDates"][0]["availableQuantity"]

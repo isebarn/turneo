@@ -200,21 +200,26 @@ class Extended(Document):
         for key, value in data.items():
             if isinstance(value, dict):
                 cls._fields[key].document_type_obj.patch(item[key], value)
-            elif isinstance(value, list) and key == "dates":
+            elif isinstance(value, list) and key == "availableDates":
                 for v in value:
                     if "dateId" in v:
                         date = next(
-                            filter(lambda x: x.dateId == v.get("dateId"), item.dates),
+                            filter(
+                                lambda x: x.dateId == v.get("dateId"),
+                                item.availableDates,
+                            ),
                             {},
                         )
-                        if date:
-                            item.dates[item.dates.index(date)] = Dates(**v)
+
+                        [setattr(date, key, value) for key, value in v.items() if date]
 
                     else:
-                        item.dates.append(Dates(**v))
+                        item.availableDates.append(Dates(**v))
 
                 deleted = [x["dateId"] for x in value if len(x) == 1 and "dateId" in x]
-                item.dates = [x for x in item.dates if x.dateId not in deleted]
+                item.availableDates = [
+                    x for x in item.availableDates if x.dateId not in deleted
+                ]
 
             else:
                 setattr(item, key, cls.fix_data(key, value))
@@ -323,7 +328,9 @@ class Extended(Document):
             **{
                 field: List(
                     Nested(
-                        api.models.get(camelize(instance.field.document_type_obj._class_name)),
+                        api.models.get(
+                            camelize(instance.field.document_type_obj._class_name)
+                        ),
                         skip_none=True,
                     ),
                 )
