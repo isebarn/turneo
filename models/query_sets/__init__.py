@@ -140,7 +140,11 @@ class BookingsQuerySet(QuerySet):
                 filter(lambda x: x["id"] == rate["experienceId"], experiences)
             )
             date = next(
-                filter(lambda x: x["dateId"] == booking["availabilityId"], rate["availableDates"]), None
+                filter(
+                    lambda x: x["availabilityId"] == booking["availabilityId"],
+                    rate["availableDates"],
+                ),
+                None,
             )
 
             booking["ratesBooked"] = {
@@ -178,6 +182,6 @@ class BookingsQuerySet(QuerySet):
             }
 
             booking["bookingCreated"] = ObjectId(booking["id"]).generation_time
-            booking['start'] = booking['ratesBooked']['start']
+            booking["start"] = booking["ratesBooked"]["start"]
 
         return bookings

@@ -202,10 +202,10 @@ class Extended(Document):
                 cls._fields[key].document_type_obj.patch(item[key], value)
             elif isinstance(value, list) and key == "availableDates":
                 for v in value:
-                    if "dateId" in v:
+                    if "availabilityId" in v:
                         date = next(
                             filter(
-                                lambda x: x.dateId == v.get("dateId"),
+                                lambda x: x.availabilityId == v.get("availabilityId"),
                                 item.availableDates,
                             ),
                             {},
@@ -216,9 +216,13 @@ class Extended(Document):
                     else:
                         item.availableDates.append(Dates(**v))
 
-                deleted = [x["dateId"] for x in value if len(x) == 1 and "dateId" in x]
+                deleted = [
+                    x["availabilityId"]
+                    for x in value
+                    if len(x) == 1 and "availabilityId" in x
+                ]
                 item.availableDates = [
-                    x for x in item.availableDates if x.dateId not in deleted
+                    x for x in item.availableDates if x.availabilityId not in deleted
                 ]
 
             else:
@@ -611,7 +615,7 @@ class StartTimes(EmbeddedDocument):
 
 
 class Dates(EmbeddedDocument):
-    dateId = StringField(default=lambda: str(ObjectId()))
+    availabilityId = StringField(default=lambda: str(ObjectId()))
     availableQuantity = IntField()
     privateGroupStatus = BooleanField(default=False)
     time = DateTimeField()

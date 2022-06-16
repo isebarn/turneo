@@ -497,7 +497,7 @@ def test_booking_trigger():
         "bookings",
         {
             "rateId": rate["id"],
-            "availabilityId": rate["availableDates"][3]["dateId"],
+            "availabilityId": rate["availableDates"][3]["availabilityId"],
             "travelerInformation": {
                 "firstName": "John",
                 "lastName": "Doe",
@@ -535,7 +535,7 @@ def test_booking_trigger_private_group_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 12}],
         },
@@ -561,7 +561,7 @@ def test_booking_trigger_private_group_no_private_groups_allowed():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -587,7 +587,7 @@ def test_booking_trigger_private_group_already_booked():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -607,7 +607,7 @@ def test_booking_trigger_private_group_already_booked():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -634,7 +634,7 @@ def test_booking_trigger_not_enough_slots():
                     "fromSeller": "This is an imaginary person",
                     "fromTraveller": "I am an imaginary person",
                 },
-                "availabilityId": rate["availableDates"][0]["dateId"],
+                "availabilityId": rate["availableDates"][0]["availabilityId"],
                 "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
             },
         )
@@ -653,7 +653,7 @@ def test_booking_trigger_not_enough_slots():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
     )
@@ -690,7 +690,7 @@ def test_booking_within_24_hours_of_cutoffTime():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -770,7 +770,7 @@ def test_email():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -869,7 +869,7 @@ def test_delete_rate_fail():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -988,7 +988,7 @@ def test_patch_nested_embedded():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -1040,7 +1040,7 @@ def test_booking_return_json():
                 "fromSeller": "This is an imaginary person",
                 "fromTraveller": "I am an imaginary person",
             },
-            "availabilityId": rate["availableDates"][0]["dateId"],
+            "availabilityId": rate["availableDates"][0]["availabilityId"],
             "privateGroup": True,
             "ratesQuantity": [{"rateType": "Adult", "quantity": 2}],
         },
@@ -1063,7 +1063,7 @@ def test_rates_dates():
             {
                 "availableDates": [
                     {
-                        "dateId": rate["availableDates"][0]["dateId"],
+                        "availabilityId": rate["availableDates"][0]["availabilityId"],
                         "availableQuantity": rate["availableDates"][0][
                             "availableQuantity"
                         ]

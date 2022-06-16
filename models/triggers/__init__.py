@@ -51,7 +51,7 @@ def available_bookings_check(sender, document):
     experience = Experiences.objects.get(id=rate.experienceId.id)
     item = next(
         filter(
-            lambda x: x.dateId == document.availabilityId,
+            lambda x: x.availabilityId == document.availabilityId,
             rate.availableDates,
         ),
         None,
@@ -70,7 +70,6 @@ def available_bookings_check(sender, document):
                 experience.cutOffTime
             ),
         )
-
 
     if document.privateGroup:
         private_group(rate, item, document)
