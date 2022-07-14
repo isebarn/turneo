@@ -574,7 +574,7 @@ class Experiences(Extended):
     otherNotes = StringField()
     commission = IntField()
     minimumParticipants = IntField()
-    cutOffTime = IntField()
+    cutOffTime = IntField(default=0)
     organizer = EmbeddedDocumentField(Partner)
     meetingPoint = EmbeddedDocumentField(MeetingPoint)
     pickup = EmbeddedDocumentField(Pickup)
