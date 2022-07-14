@@ -33,7 +33,14 @@ def post(endpoint, data):
 
 
 def post_rate(data={}):
-    exp_1 = post("experiences", {"name": "exp_1", "cutOffTime": 24})
+    exp_1 = post(
+        "experiences",
+        {
+            "name": "exp_1",
+            "cutOffTime": 24,
+            "organizer": {"name": "Jack", "partnerType": "Cars"},
+        },
+    )
     today = datetime(
         datetime.now().year, datetime.now().month, datetime.now().day, 0, 0, 0
     )

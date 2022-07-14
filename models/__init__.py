@@ -235,11 +235,12 @@ class Extended(Document):
     @classmethod
     def get(cls, *args, **kwargs):
         def recursively_query(model, fields, search, root=False):
-
             if fields == "id__in":
                 return {fields: search}
 
-            if "__" not in fields:
+            if "__" not in fields or isinstance(
+                model._fields[fields.split("__")[0]], EmbeddedDocumentField
+            ):
                 if root:
                     return {fields: search}
 
